@@ -1,0 +1,3356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neverborn — character builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Kalam:wght@400;700&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%80%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --paper:#EDEAE2; --paper-2:#F6F4EE; --paper-3:#E2DED3;
+  --ink:#141312; --ink-2:#4A4741; --ink-3:#7C786F;
+  --red:#CE2027; --red-ink:#8E1218; --red-wash:#F7DCDC;
+  --blue:#3F6FA8; --blue-wash:#DEE8F3;
+  --gold:#C9992B; --gold-wash:#F6EBCB;
+  --green:#3C7A47; --green-wash:#DEEDDF;
+  --rule:#C9C4B6; --rule-strong:#9A9487;
+  --line:rgba(63,111,168,.22);
+  --shadow:0 1px 0 rgba(20,19,18,.10);
+  --radius:3px;
+  --f-display:'Permanent Marker',system-ui,sans-serif;
+  --f-hand:'Kalam',cursive;
+  --f-ui:'Barlow',system-ui,-apple-system,sans-serif;
+  --f-cond:'Barlow Condensed','Barlow',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#15140F; --paper-2:#1D1B16; --paper-3:#26241D;
+    --ink:#EDEAE2; --ink-2:#B4AFA2; --ink-3:#847F73;
+    --red:#E8434A; --red-ink:#FFB9BB; --red-wash:#3A1618;
+    --blue:#7FAEE0; --blue-wash:#16232F;
+    --gold:#E0B44E; --gold-wash:#2E2614;
+    --green:#74BE83; --green-wash:#16281A;
+    --rule:#37342B; --rule-strong:#575244;
+    --line:rgba(127,174,224,.16);
+    --shadow:0 1px 0 rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15140F; --paper-2:#1D1B16; --paper-3:#26241D;
+  --ink:#EDEAE2; --ink-2:#B4AFA2; --ink-3:#847F73;
+  --red:#E8434A; --red-ink:#FFB9BB; --red-wash:#3A1618;
+  --blue:#7FAEE0; --blue-wash:#16232F;
+  --gold:#E0B44E; --gold-wash:#2E2614;
+  --green:#74BE83; --green-wash:#16281A;
+  --rule:#37342B; --rule-strong:#575244;
+  --line:rgba(127,174,224,.16);
+  --shadow:0 1px 0 rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--f-ui); font-size:15px; line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.ruled{
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,var(--line) 27px,var(--line) 28px);
+  background-position:0 6px;
+}
+
+#app{min-height:100vh;display:flex;flex-direction:column}
+.shell{display:flex;flex:1;min-height:0;align-items:stretch}
+
+.spine{
+  width:186px;flex:0 0 186px;background:var(--ink);color:var(--paper);
+  display:flex;flex-direction:column;position:sticky;top:0;align-self:flex-start;
+  height:100vh;overflow-y:auto;
+}
+.spine-logo{padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.14)}
+.spine-logo b{font-family:var(--f-display);font-size:21px;letter-spacing:.5px;display:block;line-height:1}
+.spine-logo span{font-family:var(--f-cond);font-size:11px;letter-spacing:.18em;color:rgba(255,255,255,.5);text-transform:uppercase}
+.navgroup{padding:10px 0 4px}
+.navgroup>h4{font-family:var(--f-cond);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42);margin:0;padding:6px 14px}
+.navitem{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:none;border:0;border-left:3px solid transparent;
+  padding:8px 14px;color:rgba(255,255,255,.74);cursor:pointer;font-size:14px;
+}
+.navitem:hover{background:rgba(255,255,255,.07);color:#fff}
+.navitem.on{background:rgba(255,255,255,.11);color:#fff;border-left-color:var(--red)}
+.navitem .ico{width:17px;text-align:center;flex:0 0 17px;opacity:.9}
+.navitem .cnt{margin-left:auto;background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:9px;padding:0 6px;min-width:18px;text-align:center}
+.spine-foot{margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.14);font-size:12px;color:rgba(255,255,255,.5)}
+.spine-foot button{background:none;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.8);border-radius:var(--radius);padding:4px 8px;font-size:12px;cursor:pointer;width:100%;margin-top:6px}
+.spine-foot button:hover{background:rgba(255,255,255,.1)}
+.whoami{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.whoami button.linklike{background:none;border:0;color:rgba(255,255,255,.55);text-decoration:underline;cursor:pointer;font-size:11px;padding:0}
+.themebtn{background:none;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.8);border-radius:var(--radius);width:26px;height:26px;cursor:pointer;font-size:13px;line-height:1}
+.themebtn:hover{background:rgba(255,255,255,.1)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.statbar{
+  position:sticky;top:0;z-index:30;background:var(--paper-2);
+  border-bottom:2px solid var(--ink);
+  display:flex;align-items:center;gap:6px;padding:7px 14px;flex-wrap:wrap;
+}
+.statbar .who{font-family:var(--f-display);font-size:16px;margin-right:4px;white-space:nowrap}
+.chip{
+  font-family:var(--f-cond);font-weight:700;font-size:13px;letter-spacing:.04em;
+  background:var(--paper-3);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:2px 7px;white-space:nowrap;display:inline-flex;gap:5px;align-items:center;
+}
+.chip b{font-family:var(--f-ui);font-weight:700;font-size:13px}
+.chip.hi{background:var(--blue-wash);border-color:var(--blue)}
+.chip.warn{background:var(--gold-wash);border-color:var(--gold)}
+.chip.bad{background:var(--red-wash);border-color:var(--red);color:var(--red-ink)}
+.chip.ok{background:var(--green-wash);border-color:var(--green)}
+.statbar .spacer{margin-left:auto}
+.xpbox{text-align:right;line-height:1.1}
+.xpbox small{display:block;font-family:var(--f-cond);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.xpbox b{font-size:19px}
+
+.page{padding:18px 22px 60px;max-width:1080px;width:100%}
+
+.banner{position:relative;display:inline-block;margin:0 0 12px;padding:3px 16px 5px;}
+.banner::before{
+  content:"";position:absolute;inset:0;background:var(--red);
+  border-radius:44% 56% 48% 52%/58% 42% 56% 44%;transform:rotate(-.6deg);
+}
+.banner span{position:relative;font-family:var(--f-display);font-size:20px;color:#fff;letter-spacing:.4px}
+h2.sec{font-family:var(--f-display);font-size:17px;margin:0 0 9px;font-weight:400}
+h3.sub{font-family:var(--f-cond);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin:0 0 7px}
+
+.card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:13px 15px;box-shadow:var(--shadow)}
+.card+.card{margin-top:12px}
+.card.tape{position:relative}
+.card.tape::before{
+  content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%) rotate(-1.4deg);
+  width:74px;height:17px;background:rgba(201,153,43,.30);border-left:1px dashed rgba(0,0,0,.12);border-right:1px dashed rgba(0,0,0,.12);
+}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.right{margin-left:auto}
+.muted{color:var(--ink-2)}
+.tiny{font-size:12px}
+.hand{font-family:var(--f-hand)}
+hr.rip{border:0;border-top:2px dashed var(--rule-strong);margin:16px 0}
+
+input[type=text],input[type=number],input[type=date],select,textarea{
+  background:var(--paper);border:1px solid var(--rule-strong);border-radius:var(--radius);
+  padding:5px 7px;width:100%;font-size:14px;
+}
+input[type=number]{-moz-appearance:textfield}
+textarea{resize:vertical;min-height:58px;font-family:var(--f-hand);font-size:15px}
+input:focus,select:focus,textarea:focus{border-color:var(--red);outline:none;box-shadow:0 0 0 2px var(--red-wash)}
+label.fl{display:block;font-family:var(--f-cond);font-weight:700;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:0 0 3px}
+.btn{
+  background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius);
+  padding:5px 12px;cursor:pointer;font-weight:600;font-size:14px;
+}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn.primary:hover{background:var(--red-ink);border-color:var(--red-ink)}
+.btn.sm{padding:3px 8px;font-size:12.5px}
+.btn.ghost{border-color:var(--rule-strong);font-weight:500}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:var(--red);color:#fff}
+.stepper{display:inline-flex;align-items:center;gap:0;border:1px solid var(--rule-strong);border-radius:var(--radius);overflow:hidden;background:var(--paper)}
+.stepper button{width:26px;height:27px;border:0;background:none;cursor:pointer;font-weight:700;color:var(--ink-2)}
+.stepper button:hover:not(:disabled){background:var(--ink);color:var(--paper)}
+.stepper button:disabled{opacity:.3;cursor:not-allowed}
+.stepper .val{min-width:34px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;border-left:1px solid var(--rule);border-right:1px solid var(--rule);height:27px;line-height:27px}
+.swtch{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13.5px}
+.swtch input{width:15px;height:15px;accent-color:var(--red);margin:0}
+
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+table.t th{font-family:var(--f-cond);font-weight:700;font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:4px 5px;border-bottom:1.5px solid var(--rule-strong)}
+table.t td{padding:3px 5px;border-bottom:1px solid var(--rule)}
+table.t td.num,table.t th.num{text-align:center;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+
+.statline{display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--rule)}
+.statline:last-child{border-bottom:0}
+.total{background:var(--ink);color:var(--paper);font-weight:700;border-radius:var(--radius);padding:1px 8px;font-variant-numeric:tabular-nums;min-width:38px;text-align:center;display:inline-block}
+
+.track{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.box{width:22px;height:22px;border:1.5px solid var(--ink);border-radius:2px;background:var(--paper);cursor:pointer;position:relative;padding:0}
+.box.on::after{content:"";position:absolute;inset:2px;background:
+  linear-gradient(45deg,transparent 43%,var(--ink) 43%,var(--ink) 57%,transparent 57%),
+  linear-gradient(-45deg,transparent 43%,var(--ink) 43%,var(--ink) 57%,transparent 57%);}
+.box.lethal{border-color:var(--red)}
+.box.lethal.on::after{background:
+  linear-gradient(45deg,transparent 43%,var(--red) 43%,var(--red) 57%,transparent 57%),
+  linear-gradient(-45deg,transparent 43%,var(--red) 43%,var(--red) 57%,transparent 57%);}
+
+.pill{font-size:11.5px;font-weight:600;border-radius:10px;padding:1px 8px;display:inline-block;white-space:nowrap}
+.pill.draft{background:var(--paper-3);color:var(--ink-2);border:1px solid var(--rule-strong)}
+.pill.pending{background:var(--gold-wash);color:var(--gold);border:1px solid var(--gold)}
+.pill.approved{background:var(--green-wash);color:var(--green);border:1px solid var(--green)}
+.pill.changes{background:var(--red-wash);color:var(--red-ink);border:1px solid var(--red)}
+.pill.p1{background:var(--blue-wash);color:var(--blue);border:1px solid var(--blue)}
+.pill.p2{background:var(--gold-wash);color:var(--gold);border:1px solid var(--gold)}
+.pill.p3{background:var(--red-wash);color:var(--red-ink);border:1px solid var(--red)}
+
+.ledger{font-size:13px}
+.ledger .li{display:flex;justify-content:space-between;gap:10px;padding:2px 0;border-bottom:1px dotted var(--rule)}
+.ledger .li.sum{border-bottom:0;border-top:2px solid var(--ink);margin-top:4px;padding-top:5px;font-weight:700}
+.ledger .li span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bigdebt{font-family:var(--f-display);font-size:42px;line-height:1;color:var(--red)}
+
+.scrim{position:absolute;inset:0;background:rgba(10,9,8,.55);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:34px 14px}
+.modal{background:var(--paper);border:2px solid var(--ink);border-radius:var(--radius);max-width:640px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35);max-height:calc(100vh - 68px);overflow-y:auto}
+.modal header{display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:2px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:2}
+.modal header h3{font-family:var(--f-display);font-size:17px;margin:0;font-weight:400}
+.modal .body{padding:15px}
+.modal .foot{padding:11px 15px;border-top:1px solid var(--rule);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--paper)}
+
+.landing{max-width:520px;margin:0 auto;padding:44px 20px 60px;text-align:center}
+.landing .logo{font-family:var(--f-display);font-size:46px;line-height:1;margin:0 0 4px}
+.landing .tag{font-family:var(--f-hand);font-size:17px;color:var(--ink-2);margin:0 0 26px}
+.landing .card{text-align:left}
+
+.crewcard{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:11px 13px;cursor:pointer;position:relative}
+.crewcard:hover{border-color:var(--ink)}
+.crewcard.me{border-left:4px solid var(--red)}
+.crewcard h4{margin:0;font-family:var(--f-display);font-size:15px;font-weight:400}
+.crewcard .styl{font-family:var(--f-hand);font-size:13.5px;color:var(--ink-2);margin-bottom:6px}
+
+/* auth screen */
+.authtabs{display:flex;border-bottom:1px solid var(--rule);margin-bottom:14px}
+.authtabs button{flex:1;background:none;border:0;padding:9px 4px;font-family:var(--f-cond);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent}
+.authtabs button.on{color:var(--ink);border-bottom-color:var(--red)}
+.btn.google{width:100%;background:var(--paper);border:1.5px solid var(--rule-strong);display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600}
+.btn.google:hover{background:var(--paper-3);color:var(--ink)}
+.orline{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--ink-3);font-size:12px}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--rule)}
+.authlink{background:none;border:0;color:var(--blue);text-decoration:underline;cursor:pointer;font-size:12.5px;padding:0}
+
+/* role badges on campaign cards */
+.rolebadge{font-family:var(--f-cond);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border-radius:9px;padding:2px 8px;display:inline-block}
+.rolebadge.gm{background:var(--red);color:#fff}
+.rolebadge.player{background:var(--blue);color:#fff}
+
+.meter{height:7px;background:var(--paper-3);border-radius:4px;overflow:hidden;border:1px solid var(--rule)}
+.meter i{display:block;height:100%;background:var(--red)}
+.meter i.ok{background:var(--green)}
+
+.empty{border:2px dashed var(--rule-strong);border-radius:var(--radius);padding:26px 16px;text-align:center;color:var(--ink-2)}
+.empty p{margin:0 0 10px}
+
+.toast{position:sticky;bottom:12px;margin:0 auto;max-width:440px;background:var(--ink);color:var(--paper);padding:9px 14px;border-radius:var(--radius);font-size:13.5px;z-index:200;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.mobnav{display:none}
+@media (max-width:820px){
+  .spine{display:none}
+  .mobnav{display:flex;overflow-x:auto;gap:4px;background:var(--ink);padding:6px 8px;position:sticky;top:0;z-index:40}
+  .mobnav button{background:none;border:0;color:rgba(255,255,255,.72);padding:5px 10px;border-radius:var(--radius);white-space:nowrap;font-size:13.5px;cursor:pointer}
+  .mobnav button.on{background:rgba(255,255,255,.14);color:#fff}
+  .statbar{top:39px;padding:6px 10px}
+  .page{padding:14px 12px 60px}
+  .modal{max-height:calc(100vh - 40px)}
+  .scrim{padding:20px 8px}
+}
+@media print{.spine,.mobnav,.statbar{display:none}}
+</style>
+</head>
+<body>
+<div id="app" aria-live="polite"></div>
+
+<!-- ============================================================
+     FIREBASE SETUP — paste your project's config below.
+     Firebase Console → Project settings → General → Your apps →
+     Web app → SDK setup and configuration → "Config".
+     Also enable, under Authentication → Sign-in method:
+     Email/Password, and Google. See SETUP.md for the full walkthrough,
+     including the Google sign-in "authorized domain" step.
+     Until this is filled in, the app runs in a local demo mode:
+     usable on your own machine with fake local accounts, but nothing
+     syncs between browsers and Google sign-in is unavailable.
+     ============================================================ -->
+<script>
+window.NEVERBORN_FIREBASE_CONFIG = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* =========================================================================
+   NEVERBORN — rules engine. Every number here comes from the rulebook
+   unless marked HOUSE (house rules the GM can edit in Campaign settings).
+   ========================================================================= */
+"use strict";
+
+const ATTRS = [
+  {k:"str", n:"Strength"},   {k:"dex", n:"Dexterity"},
+  {k:"con", n:"Constitution"},{k:"int", n:"Intelligence"},
+  {k:"wis", n:"Wisdom"},     {k:"cha", n:"Charisma"}
+];
+const SAVES = [
+  {k:"will", n:"Will", attr:"wis"},
+  {k:"reflex", n:"Reflex", attr:"dex"},
+  {k:"fortitude", n:"Fortitude", attr:"con"}
+];
+/* Defense alone carries a base 10. Initiative keeps its Dex mod and Soak its
+   half-Con bonus from the sheet; Melee and Ranged are flat purchased totals. */
+const COMBAT = [
+  {k:"defense",    n:"Defense",    base:10, attr:null,  half:false},
+  {k:"initiative", n:"Initiative", base:0,  attr:"dex", half:false},
+  {k:"soak",       n:"Soak",       base:0,  attr:"con", half:true },
+  {k:"melee",      n:"Melee",      base:0,  attr:null,  half:false},
+  {k:"ranged",     n:"Ranged",     base:0,  attr:null,  half:false}
+];
+
+const STYLES = {
+  death:{n:"Death", nick:"Goth Kids", power:"Endings", order:"Sibling style #1",
+    set:["Power over endings. Can end or stop the end of things.",
+         "Can intuitively sense when something could end or change."],
+    blurb:"The oldest and most common of the Neverborn. Practical, a little cold, quietly hedonistic."},
+  time:{n:"Time", nick:"Docs", power:"Flow", order:"Sibling style #2",
+    set:["Can manipulate the flow of time on varying scales.",
+         "Can always sense temporal distortions."],
+    blurb:"Precise, perfectionist, never in a hurry. They could theoretically have all the time in the world."},
+  gravity:{n:"Gravity", nick:"Newts", power:"Mass", order:"Sibling style #3",
+    set:["Can manipulate gravity and mass, physical and metaphysical.",
+         "Can always determine the amount of gravity an object holds."],
+    blurb:"Empathetic and often extremely athletic. The Steve Rogers of the Neverborn world."},
+  order:{n:"Order", nick:"Hall Monitors", power:"Law", order:"Sibling style #4",
+    set:["Can enforce natural law, nullify powers, and set laws in an area.",
+         "Instinctively knows the correct order of natural law and feels it being violated."],
+    blurb:"The rarest type. Either obsessive precision or total lackadaisical drift, rarely in between."},
+  radiation:{n:"Radiation", nick:"Chernies", power:"Lumen", order:"Sibling style #5",
+    set:["Manipulates radiation in all forms.",
+         "Can always sense what type of radiation is in an area."],
+    blurb:"Adrenaline junkies and party animals. When light is your plaything you tend to get bright."},
+  calorimetry:{n:"Calorimetry", nick:"Burners", power:"Exchange", order:"Sibling style #6",
+    set:["Manipulates the transference and transformation of energy.",
+         "Intuitively knows the amount of energy an object holds."],
+    blurb:"Balance-seekers with an eye for aesthetics. The hippies and backpackers, free on the wind."}
+};
+const STYLE_KEYS = Object.keys(STYLES);
+
+const PROF_BASE = {1:20, 2:40, 3:200};
+const PROF_TEXT = {
+  1:"Science logic. Concrete and physical only — no abstract or metaphysical aspects.",
+  2:"Comic and anime logic. Abstract notions with one foot in the physical realm.",
+  3:"Your logic. Complete abstraction. You tell reality what your power is."
+};
+
+/* ---- Endings: self-contained likelihood tiers (they replace the base debt) */
+const ENDINGS_TIERS = [
+  {v:30, n:"Everyday", ex:"Tripping, a battery dying, lights going out, a gun jamming."},
+  {v:40, n:"Mundane but uncommon", ex:"A pipe bursting, a car engine failing, something catching fire."},
+  {v:50, n:"Rare, not catastrophic", ex:"Finding a $20 bill, a one-hit knockout, a healthy person suddenly dying."},
+  {v:60, n:"Extremely rare, major result", ex:"A car accident, a city block losing power, a fuel tank exploding."},
+  {v:70, n:"Once in a lifetime", ex:"A building collapsing, a dam bursting."}
+];
+
+/* ---- Prof 1 scales, per power ------------------------------------------ */
+const SCALES = {
+  Endings:[],
+  Flow:[
+    {k:"fwd", n:"Seconds forward", unit:"sec", per:1, step:1,
+     hint:"+1 debt per second moved forward.", tradeUnit:"min"},
+    {k:"back", n:"Seconds backward", unit:"sec", per:3, step:1,
+     hint:"+3 debt per second — time does not like moving this way.", tradeUnit:"min"}
+  ],
+  Mass:[
+    {k:"kg", n:"Kilograms", unit:"kg", per:1, step:1, hint:"+1 debt per kilogram affected.", tradeMult:10},
+    {k:"gal", n:"Galileos", unit:"Gal", per:1, step:1, hint:"+1 debt per Gal of attraction or repulsion.", tradeMult:10},
+    {k:"dens", n:"Density", unit:"g/cm³", per:2, step:0.5, hint:"+1 debt per 0.5 g/cm³ changed.", tradeMult:10}
+  ],
+  Lumen:[
+    {k:"cd", n:"Candela", unit:"cd", per:0.2, step:5, hint:"+1 debt per 5 candela.", tradeMult:10},
+    {k:"v", n:"Volts", unit:"V", per:0.1, step:10, hint:"+1 debt per 10 volts.", tradeMult:10},
+    {k:"t", n:"Teslas", unit:"T", per:100, step:0.01, hint:"+1 debt per 0.01 Tesla.", tradeMult:10}
+  ],
+  Exchange:[
+    {k:"j", n:"Joules", unit:"J", per:0.1, step:10, hint:"+1 debt per 10 joules transferred.", tradeMult:10},
+    {k:"n", n:"Newtons", unit:"N", per:0.02, step:50, hint:"+1 debt per 50 newtons transferred.", tradeMult:10},
+    {k:"c", n:"Celsius", unit:"°C", per:1, step:1, hint:"+1 debt per degree transferred.", tradeMult:10}
+  ],
+  Law:[
+    {k:"time", n:"Duration", unit:"sec", banded:12, hint:"+1/sec to 12s, +2/sec to 24s, +3/sec to 36s, and so on.", tradeUnit:"min"},
+    {k:"dist", n:"Distance", unit:"ft", banded:5, hint:"+1/ft to 5ft, +2/ft to 10ft, +3/ft to 15ft, and so on.", tradeBand:5}
+  ]
+};
+
+/* ---- reference tables shown inside the forge ---------------------------- */
+const REF = {
+  Mass:{title:"Kilogram scale", cols:["Mass","Example","Tier","Effect"], rows:[
+    ["1 kg","Water bottle","0 — minor","Pain and distraction. No combat impairment."],
+    ["5 kg","Bowling ball","2 — moderate","Can break fingers, nose, ribs; a head hit may stun."],
+    ["10 kg","Microwave","3 — heavy","Fracture likely, knockdown possible."],
+    ["20 kg","Packed suitcase","4 — severe","Broken limbs, concussion, incapacitation."],
+    ["30 kg","Large dog","4+ — severe","Knockdown, broken bones at running speed."],
+    ["50 kg","Concrete bag","5 — critical","Major fractures, internal injuries."],
+    ["75 kg","Human body","5 — critical","A full-speed collision can incapacitate or kill."],
+    ["100 kg","Refrigerator","6 — devastating","Multiple fractures, organ trauma."],
+    ["150 kg","Motorcycle engine","6+ — devastating","Catastrophic. Armor required to survive."],
+    ["200 kg","Baby grand piano","7 — catastrophic","A direct hit can be fatal."],
+    ["250 kg","Vending machine","7+ — catastrophic","Survival unlikely if trapped underneath."],
+    ["300 kg","Sport motorcycle","8 — lethal","Comparable to a vehicle strike."],
+    ["400+ kg","Adult lion","8 — lethal","Incapacitation almost guaranteed."]
+  ]},
+  MassDensity:{title:"Density scale", cols:["g/cm³","Material","Knife","Bullet","Protection tier"], rows:[
+    ["0.001","Air","None","None","0 — none"],
+    ["0.02–0.10","Foam, aerogel","None","None","0 — decorative"],
+    ["0.2–0.6","Cork, soft wood","Very easy","Very easy","1 — light cover"],
+    ["0.6–1.0","Hardwood, plastic","Easy","Easy","2 — weak armor"],
+    ["1.0–2.0","Ice, brick, concrete","Moderate","Low–moderate","3 — light barrier"],
+    ["2.0–3.5","Stone, granite, glass","Difficult","Moderate","4 — hard barrier"],
+    ["3.5–5.5","Titanium, ceramics","Very difficult","High","6 — tactical armor"],
+    ["5.5–8.0","Steel, iron","Extremely difficult","High","7 — heavy armor"],
+    ["8.0–12.0","Copper, lead","Difficult (soft)","Moderate","5 — heavy but soft"],
+    ["12.0–20.0","Tungsten, gold","Very difficult","Very high","8 — elite armor"],
+    ["20.0–23.0","Osmium, iridium","Extremely difficult","Extreme","9 — near-impervious"]
+  ]},
+  MassGal:{title:"Galileo scale", cols:["Acceleration","Gravity level","Example bodies","Stays in orbit"], rows:[
+    ["1–10 Gal","Weak microgravity","Small asteroids, comets","Dust, pebbles, loose regolith"],
+    ["10–50 Gal","Very low gravity","Itokawa, Eros, Phobos","Small boulders, weakly bound debris"],
+    ["50–100 Gal","Weak asteroid gravity","Ceres, Deimos","Large rocks, small captured objects"],
+    ["100–500 Gal","Moderate moon-like","Enceladus, Mimas","Small spacecraft, debris, weak moons"],
+    ["500–1,000 Gal","Moon-level","Earth's Moon, Europa, Io","Small moons, spacecraft, regolith"],
+    ["1,000–5,000 Gal","Large moon / small planet","Mercury, Ganymede, Titan","Asteroids, satellites, stations"],
+    ["5,000–10,000 Gal","Small terrestrial planet","Mars, Pluto","Moons, stations, large asteroids"]
+  ]},
+  Lumen:{title:"Candela scale", cols:["Level","Measurement","Example"], rows:[
+    ["Tiny","0.01 cd","A dim LED indicator."],["Low","0.1 cd","A small nightlight."],
+    ["Moderate","1 cd","A candle flame."],["Standard","10 cd","A small flashlight beam."],
+    ["Bright","100 cd","A car headlight on low beam."],["Very bright","1,000 cd","A camera flash."],
+    ["Intense","10,000 cd","A strong searchlight."],["Extremely bright","100,000 cd","A stage spotlight or floodlight."],
+    ["Super bright","1,000,000 cd","Aircraft landing lights."],["Extreme","10,000,000 cd","A lighthouse beam."],
+    ["Blinding","100,000,000 cd","A focused laser."]
+  ]},
+  LumenVolt:{title:"Voltage scale", cols:["Voltage","Human","Wooden door","Sheet iron","Riot shield"], rows:[
+    ["1 V","Barely perceptible","None","None","None"],
+    ["10 V","Slight tingle","None","None","None"],
+    ["100 V","Painful shock, muscle contraction","None","None","None"],
+    ["1 kV","Potentially fatal electrocution","None","None","None"],
+    ["10 kV","Severe burns, nerve damage, likely fatal","Slight charring","None","None"],
+    ["100 kV","Instant cardiac arrest","Burn marks, minor damage","None","Minor surface ionization"],
+    ["1 MV","Likely fatal at a distance","Ignites or chars","Minor sparks","Minor ionization"],
+    ["10 MV","Severe burns, deadly arc flash","Catches fire or explodes","Localized melting","Electrical breakdown, intact"],
+    ["100 MV","Instant incineration","Instantly burns, may fragment","Breakdown, minor melting","Severe ionization, fracturing"],
+    ["1 GV","Body obliterated","Vaporized","Melts or disintegrates","Total structural failure"]
+  ]},
+  LumenTesla:{title:"Tesla magnetic scale", cols:["Strength","Measurement","Example","Effect"], rows:[
+    ["None","0 T","Plastic, wood, glass","Non-magnetic materials"],
+    ["Weakest natural","~1 µT","Earth's magnetic field","Compass needles align"],
+    ["Weak household","~1 mT","Refrigerator magnets","Holds small papers"],
+    ["Moderate industrial","~0.1–1 T","MRI, junkyard electromagnets","Can lift cars, scan bodies"],
+    ["Strongest common","~1–3 T","Neodymium magnets","Headphones, drives, turbines"],
+    ["Very strong","~10 T","Superconducting magnets","Fusion research, accelerators"],
+    ["Extremely powerful","~1,000 T","Pulsars","Traps and accelerates particles"],
+    ["Strongest known","~10¹¹ T","Magnetars","Distorts atomic structure and space"]
+  ]},
+  Exchange:{title:"Joules force scale", cols:["Energy","Equivalent","Damage to a human body"], rows:[
+    ["1 J","Flick of a finger","No damage."],["10 J","A child's fast punch","Slight discomfort."],
+    ["50 J","Moderate punch","Mild bruising or soreness."],["100 J","Hard adult punch, light blunt weapon","Noticeable pain, bruising."],
+    ["300 J","Baseball bat swing, small dog bite","Deep bruises, minor lacerations."],
+    ["500 J",".22 LR bullet","Soft tissue penetration, internal bleeding."],
+    ["1,000 J","Pro boxer's punch, full-speed tackle","Fractures, organ trauma, concussion."],
+    ["2,000 J","9mm or .45 ACP","Lethal if it strikes vital organs."],
+    ["5,000 J","Shotgun slug, long fall","Shattered bones, heavy internal bleeding."],
+    ["10,000 J","5.56mm rifle round, 30mph collision","Massive trauma, often fatal."],
+    ["30,000 J","Sniper rifle, struck by a small vehicle","Total incapacitation, likely fatal."],
+    ["100,000 J","Grenade at close range","Near-total body trauma."],
+    ["1,000,000 J","Close-range explosion","Complete destruction of the body."]
+  ]},
+  ExchangeNewton:{title:"Newton force scale", cols:["Force","Scenario","Human","Door","Sheet iron","Riot shield"], rows:[
+    ["1–10 N","Light push","Barely felt","None","None","None"],
+    ["10–50 N","Firm shove","May lose balance","Minor creak","None","None"],
+    ["50–100 N","Hard push","Stumble or bruise","Rattles, hinges stressed","None","None"],
+    ["100–500 N","Strong punch or kick","Bruises, possible fracture","Weak door cracks","Small dent","None"],
+    ["500–1,000 N","Full-force punch, hammer","Broken bones","Wooden door breaks","Significant dent","Absorbs, may crack"],
+    ["1,000–5,000 N","Bat swing, slow car impact","Major fractures","Heavy door cracks","Thick iron deforms","Flexes but holds"],
+    ["5,000–10,000 N","Sledgehammer","Severe, potentially fatal","Metal door bends","Major dent","May crack"],
+    ["10,000–50,000 N","30+ mph crash, press","Fatal, body crushed","Steel door deforms","Bends or punctures","Shatters"],
+    ["50,000–100,000 N","Heavy machinery","Instant fatality","Reinforced doors break","Severely warped","Completely fails"],
+    ["100,000+ N","Explosion, tank shell","Complete obliteration","Nothing remains","Torn apart","Useless"]
+  ]},
+  ExchangeCelsius:{title:"Celsius scale", cols:["Temp","Human","Wooden door","Sheet iron","Riot shield"], rows:[
+    ["−273.15 °C","Instant death","Extremely brittle, shatters","Brittle, may shatter","Brittle, may shatter"],
+    ["−200 °C","Severe frostbite, instant tissue damage","Extremely brittle","Brittle, fractures","Possible cracks"],
+    ["−100 °C","Severe frostbite in seconds","Fibres freeze, may crack","Harder, slightly brittle","Reduced flexibility"],
+    ["−50 °C","Frostbite under a minute","Increased brittleness","Slight contraction","Slightly less flexible"],
+    ["0 °C","Hypothermia risk","No major change","No major change","No major change"],
+    ["25 °C","Normal","Normal","Normal","Normal"],
+    ["100 °C","Severe burns","Dries faster","No damage","No damage"],
+    ["200 °C","Instant third-degree burns","Charring begins","No damage","No damage"],
+    ["300 °C","Fatal burns, unconscious in seconds","Starts burning","Minor oxidation","Some softening"],
+    ["500 °C","Instant combustion of skin","Fully engulfed","Red hot","Begins to deform"],
+    ["1000 °C","Immediate incineration","Vaporized","Melts","Melts or burns away"],
+    ["2000 °C","Fully vaporized","Vaporized","Molten","Molten"]
+  ]},
+  Endings:{title:"Endings scale", cols:["Probability of ending","Reaction","Example","Why it stops"], rows:[
+    ["~100% certain, immediate","Instantaneous chemical","Striking a match","Fuel is consumed, motion stops"],
+    ["99.999%+ quickly","Mechanical motion","A bouncing ball coming to rest","Energy lost to friction and air"],
+    ["99.9% minutes to hours","Thermal dissipation","Hot coffee cooling","Heat transfers to the surroundings"],
+    ["90–99% hours to days","Biological","Bread going stale","Moisture evaporates, chemistry shifts"],
+    ["80–90% weeks to years","Material degradation","Clothes fading in sunlight","UV breaks down dye molecules"],
+    ["50–80% decades to centuries","Corrosion and wear","A car rusting","Oxygen reacts, coatings slow it"],
+    ["10–50% sometimes","Urban motion","City traffic patterns","Lights and regulation, never full stop"],
+    ["1–10% unlikely","Human activity","People using smartphones","Trends change, comms keep evolving"],
+    ["0.1–1% practically endless","Planetary","Ocean waves","Tides are driven by the moon"],
+    ["<0.0001% theoretical","Cosmic motion","Earth spinning on its axis","Rotation lasts billions of years"],
+    ["~0% eternal","Fundamental physics","Gravity holding you down","Unless the universe changes"]
+  ]}
+};
+
+/* ---- conditions, limitations, ranges ----------------------------------- */
+const LINK_PORT = [
+  {v:0,  n:"Not linked to an object"},
+  {v:-5, n:"Pocketable — smartphone, reporter's notebook"},
+  {v:-10,n:"Jacket-concealable — handgun, flashlight, full notebook"},
+  {v:-15,n:"Trenchcoat-concealable — sword, cane, rifle"},
+  {v:-20,n:"Not portable — car, polearm, large animal"}
+];
+const LINK_DIST = [
+  {v:0,  n:"Not linked to an object"},
+  {v:-5, n:"Everyday — replaceable at a convenience store"},
+  {v:-10,n:"Rare but reproducible in under a day"},
+  {v:-15,n:"Custom, remakeable with a week or more of effort"},
+  {v:-20,n:"One of a kind — lose it and the expression is gone for good"}
+];
+const COND_TIERS = [
+  {v:-5, n:"Easy", d:"Minimal effort, resolves as a triggered action.", act:"triggered"},
+  {v:-10,n:"Medium", d:"Takes a standard action — an attack roll, a question answered, an acrobatic move.", act:"standard"},
+  {v:-15,n:"Hard", d:"Multi-staged, takes a full round — a dance, a chant, a drawn symbol.", act:"full"}
+];
+const COND_SAVE = [
+  {v:0,  n:"No saving throw"},
+  {v:-5, n:"DC 15 + throw modifier"},
+  {v:-10,n:"DC 10 + throw modifier"},
+  {v:-15,n:"DC 5 + throw modifier"}
+];
+const LIMIT_TIERS = [
+  {v:-5, n:"Loose", d:"Broad or easily circumvented — can't be moving, no organic material."},
+  {v:-10,n:"Tight", d:"Narrow and hard to dodge — a limited number of uses a day, humans only."},
+  {v:-15,n:"Specific", d:"Extremely narrow — only at a certain hour, only on redheads."}
+];
+const RANGES = [
+  {v:0,  k:"minds-eye", n:"Mind's eye", d:"If you can picture it, you can affect it. The default."},
+  {v:-5, k:"perception-aided", n:"Perception, aided", d:"Anything you can see through any medium — a camera, a stream, binoculars."},
+  {v:-10,k:"perception-unaided", n:"Perception, unaided", d:"You must see it clearly with your own eyes, in the same space."},
+  {v:-15,k:"melee", n:"Melee / touch", d:"You have to physically touch it."},
+  {v:-20,k:"personal", n:"Personal", d:"Affects only you."}
+];
+const ACTIONS = {free:"Free", standard:"Standard", full:"Full round", triggered:"Triggered", move:"Move"};
+
+/* ---- skills ------------------------------------------------------------ */
+const SKILLS = [
+  {k:"acrobatics", n:"Acrobatics", attr:["dex"]},
+  {k:"sleight", n:"Sleight of hand", attr:["dex"]},
+  {k:"subterfuge", n:"Subterfuge", attr:["cha"]},
+  {k:"charm", n:"Charm", attr:["cha"], social:true},
+  {k:"intimidate", n:"Intimidate", attr:["str","cha"], social:true},
+  {k:"larceny", n:"Larceny", attr:["int"]},
+  {k:"drive", n:"Drive", attr:["dex","wis"], sub:"vehicle"},
+  {k:"athletics", n:"Athletics", attr:["dex","str","con"], sub:"sport"},
+  {k:"computer", n:"Computer", attr:["int"]},
+  {k:"survival", n:"Survival", attr:["con","wis"]},
+  {k:"animalken", n:"Animal ken", attr:["cha","wis"]},
+  {k:"languages", n:"Languages", attr:["int"], sub:"language"},
+  {k:"notice", n:"Notice", attr:["wis"]},
+  {k:"sensemotive", n:"Sense motive", attr:["int","wis"]},
+  {k:"stealth", n:"Stealth", attr:["dex"]},
+  {k:"medicine", n:"Medicine", attr:["int"]},
+  {k:"profession", n:"Profession", attr:["int"], sub:"field"}
+];
+const SKILL_DESC = {
+  acrobatics:"Jumping between moving platforms, vaulting a crowd, sliding past security lasers.",
+  sleight:"Palming objects, picking pockets, switching things undetected.",
+  subterfuge:"Lying out loud or on paper. Also covers forgeries.",
+  charm:"Getting someone to like you and listen. Not mind control, but it helps a negotiation.",
+  intimidate:"Scaring someone into compliance. Uses whichever of Strength or Charisma is higher.",
+  larceny:"Breaking and entering, cracking safes, defeating security codes.",
+  drive:"Operating one type of vehicle. Pick a subtype — cars, bikes, helicopters, speedboats.",
+  athletics:"One sport, applied usefully. A climber scales walls; a wrestler grapples better.",
+  computer:"Databases, code, hacking, safely disabling electronics.",
+  survival:"Thriving in harsh climates, tracking, navigating remote country.",
+  animalken:"Befriending and training animals.",
+  languages:"Affinity with one secondary language.",
+  notice:"Actively detecting danger, picking out detail, spotting discrepancies.",
+  sensemotive:"Telling whether someone or something is trying to deceive you.",
+  stealth:"Moving and acting completely undetected.",
+  medicine:"Medical and healing knowledge.",
+  profession:"One professional field, defined by you and the GM together."
+};
+
+/* ---- equipment. Book items are canon:true; the rest are HOUSE additions
+       built to the same paradigm and gated on the Resources background. --- */
+const GEAR = [
+  {id:"m1l", n:"One-handed lethal melee", cat:"Melee", canon:true, res:1,
+   ex:"Short swords, hand axes, maces, katars, daggers.",
+   dmg:"Bashing +2", note:"Deals lethal damage instead on an attack roll of 16 or higher."},
+  {id:"m1n", n:"One-handed non-lethal melee", cat:"Melee", canon:true, res:0,
+   ex:"Batons, night sticks, escrima sticks.", dmg:"Bashing +3", note:""},
+  {id:"m2l", n:"Two-handed lethal melee", cat:"Melee", canon:true, res:1,
+   ex:"Long swords, katana, spears.", dmg:"Bashing +4", note:"Deals lethal damage instead on an attack roll of 16 or higher."},
+  {id:"m2n", n:"Two-handed non-lethal melee", cat:"Melee", canon:true, res:0,
+   ex:"Quarterstaffs, bokken, steel pipes, baseball bats.", dmg:"Bashing +5", note:""},
+  {id:"g1", n:"Semi-automatic handgun", cat:"Ranged", canon:true, res:2,
+   ex:"9mm handguns, revolvers.", dmg:"Lethal, 1 level", note:""},
+  {id:"g2", n:"Magnum handgun", cat:"Ranged", canon:true, res:2,
+   ex:"Desert Eagles, high-calibre revolvers.", dmg:"Lethal, 2 levels", note:""},
+  {id:"g3", n:"Rifle", cat:"Ranged", canon:true, res:2,
+   ex:"Bolt action and hunting rifles.", dmg:"Lethal, 2 levels", note:"+2 to ranged attack."},
+  {id:"g4", n:"Assault rifle", cat:"Ranged", canon:true, res:3,
+   ex:"M-16, AK-47.", dmg:"Lethal, 2 levels", note:"+3 to ranged attack."},
+  {id:"g5", n:"Non-lethal ranged", cat:"Ranged", canon:true, res:0,
+   ex:"Stun guns, tasers, pepper spray.", dmg:"Stun +3", note:""},
+  {id:"e1", n:"Handheld explosives", cat:"Explosive", canon:true, res:3,
+   ex:"Hand grenades, pipe bombs.", dmg:"Lethal, 1 level", note:"10 foot area of effect."},
+  {id:"e2", n:"Rocket propelled explosives", cat:"Explosive", canon:true, res:4,
+   ex:"RPGs, bazookas, grenade launchers.", dmg:"Lethal, 2 levels", note:"10 foot area of effect. +2 to ranged attack."},
+  {id:"a1", n:"Armor", cat:"Armor", canon:true, res:2,
+   ex:"Any worn protective layer.", dmg:"—", note:"Lets the wearer roll soak against lethal damage, +2 modifier."},
+  {id:"c1", n:"Handheld communicator", cat:"Comms", canon:true, res:0,
+   ex:"Radio handsets.", dmg:"—", note:"Radio waves, 100 foot range."},
+  {id:"c2", n:"Cell phone", cat:"Comms", canon:true, res:0,
+   ex:"Any modern handset.", dmg:"—", note:"Cell signal, unlimited range."},
+  {id:"c3", n:"Bluetooth coms", cat:"Comms", canon:true, res:0,
+   ex:"Earpieces.", dmg:"—", note:"Cell or wifi, must be paired with a device."},
+  /* HOUSE additions, same paradigm */
+  {id:"h1", n:"Brass knuckles", cat:"Melee", res:0, ex:"Knuckle dusters, roll of quarters.",
+   dmg:"Bashing +1", note:"Pocketable and easy to conceal."},
+  {id:"h2", n:"Combat knife", cat:"Melee", res:0, ex:"Fighting knives, switchblades.",
+   dmg:"Bashing +2", note:"Lethal on 16 or higher. Pocketable."},
+  {id:"h3", n:"Crossbow or compound bow", cat:"Ranged", res:2, ex:"Hunting bows, tactical crossbows.",
+   dmg:"Lethal, 1 level", note:"+1 to ranged attack. Silent — no Notice check is triggered by the shot."},
+  {id:"h4", n:"Shotgun", cat:"Ranged", res:2, ex:"Pump-action, sawn-off.",
+   dmg:"Lethal, 2 levels", note:"+2 to ranged attack within 30 feet, −2 beyond it."},
+  {id:"h5", n:"Submachine gun", cat:"Ranged", res:3, ex:"MP5, Uzi, Skorpion.",
+   dmg:"Lethal, 1 level", note:"+2 to ranged attack. May split the attack across two adjacent targets at −2 each."},
+  {id:"h6", n:"Suppressor", cat:"Ranged", res:3, ex:"Screw-on or integral.",
+   dmg:"—", note:"Fitted to a handgun or rifle. −5 to any Notice check made to locate the shot."},
+  {id:"h7", n:"Concealable vest", cat:"Armor", res:2, ex:"Soft ballistic panels under clothing.",
+   dmg:"—", note:"Soak against lethal, +1 modifier. No penalty to Stealth."},
+  {id:"h8", n:"Riot gear", cat:"Armor", res:3, ex:"Hard plates, helmet, pads.",
+   dmg:"—", note:"Soak against lethal, +3 modifier. −2 to Stealth and Acrobatics."},
+  {id:"h9", n:"Plate carrier", cat:"Armor", res:4, ex:"Ceramic rifle plates.",
+   dmg:"—", note:"Soak against lethal, +4 modifier. −1 to Acrobatics. Obvious under anything but a coat."},
+  {id:"h10", n:"Ballistic shield", cat:"Armor", res:3, ex:"Riot shield.",
+   dmg:"—", note:"+3 to Defense against ranged attacks. Occupies one hand."},
+  {id:"h11", n:"Smoke grenade", cat:"Explosive", res:2, ex:"Screening smoke.",
+   dmg:"—", note:"15 foot cloud. −5 to Notice and to any unaided-perception expression through it."},
+  {id:"h12", n:"Flashbang", cat:"Explosive", res:3, ex:"Stun grenade.",
+   dmg:"Stun +4", note:"10 foot area of effect."},
+  {id:"h13", n:"Lockpick set", cat:"Kit", res:0, ex:"Rakes, tension wrenches, bump keys.",
+   dmg:"—", note:"+2 to Larceny when defeating a physical lock."},
+  {id:"h14", n:"Burner phone", cat:"Comms", res:0, ex:"Prepaid handset.",
+   dmg:"—", note:"Unlimited range. Untraceable for one session, then it burns."},
+  {id:"h15", n:"Field laptop", cat:"Kit", res:2, ex:"Ruggedised laptop, hacking deck.",
+   dmg:"—", note:"+2 to Computer."},
+  {id:"h16", n:"Surveillance drone", cat:"Kit", res:3, ex:"Quadcopter with a camera feed.",
+   dmg:"—", note:"Extends aided-perception range for 30 minutes of flight time."},
+  {id:"h17", n:"Medkit", cat:"Kit", res:2, ex:"Trauma bag.",
+   dmg:"—", note:"+2 to Medicine. Accelerates healing of one level of bashing damage, GM's call on the timing."},
+  {id:"h18", n:"Night vision optics", cat:"Kit", res:3, ex:"Head-mounted or scope-mounted.",
+   dmg:"—", note:"Negates darkness penalties to Notice and to ranged attack."},
+  {id:"h19", n:"Armored vehicle", cat:"Kit", res:4, ex:"Up-armored SUV.",
+   dmg:"—", note:"Occupants roll soak against lethal at +4 while inside. Impossible to conceal."}
+];
+
+/* ---- HOUSE: how an expression's scale maps to damage -------------------- */
+const DEFAULT_TIERS = [
+  {t:0, n:"Minor",        kg:"1 kg",        j:"≤10 J",           nt:"≤50 N",          type:"bashing", mod:0,  lv:0},
+  {t:1, n:"Light",        kg:"2 kg",        j:"50 J",            nt:"50–100 N",       type:"bashing", mod:1,  lv:0},
+  {t:2, n:"Moderate",     kg:"5 kg",        j:"100 J",           nt:"100–500 N",      type:"bashing", mod:2,  lv:0},
+  {t:3, n:"Heavy",        kg:"10 kg",       j:"300 J",           nt:"500–1,000 N",    type:"bashing", mod:4,  lv:0},
+  {t:4, n:"Severe",       kg:"20–30 kg",    j:"500 J",           nt:"1,000–5,000 N",  type:"bashing", mod:6,  lv:0},
+  {t:5, n:"Critical",     kg:"50–75 kg",    j:"1,000–2,000 J",   nt:"5,000–10,000 N", type:"lethal",  mod:0,  lv:1},
+  {t:6, n:"Devastating",  kg:"100–150 kg",  j:"5,000 J",         nt:"10,000–50,000 N",type:"lethal",  mod:2,  lv:2},
+  {t:7, n:"Catastrophic", kg:"200–250 kg",  j:"10,000–30,000 J", nt:"50,000–100,000 N",type:"lethal", mod:4,  lv:2},
+  {t:8, n:"Lethal",       kg:"300+ kg",     j:"100,000+ J",      nt:"100,000+ N",     type:"lethal",  mod:6,  lv:3}
+];
+const TIER_THRESH = {
+  kg:[[0,0],[2,1],[5,2],[10,3],[20,4],[50,5],[100,6],[200,7],[300,8]],
+  j: [[0,0],[50,1],[100,2],[300,3],[500,4],[1000,5],[5000,6],[10000,7],[100000,8]],
+  n: [[0,0],[50,1],[100,2],[500,3],[1000,4],[5000,5],[10000,6],[50000,7],[100000,8]]
+};
+function tierFor(kind, value){
+  const table = TIER_THRESH[kind]; if(!table) return null;
+  let t = null;
+  for(const [thresh, tier] of table){ if(value >= thresh) t = tier; }
+  return t;
+}
+
+/* ---- damage tracks ----------------------------------------------------- */
+const DMG_BASH = [
+  "No negative effects.",
+  "−1 to every combat and saving roll.",
+  "−2 to every combat and saving roll.",
+  "−2 to every combat and saving roll. Standard or move action only, and you must roll to stabilize after a standard action.",
+  "Incapacitated. Move or standard action only.",
+  "Unconscious. Can be revived to level 5."
+];
+const DMG_LETHAL = [
+  "Incapacitated. Move or standard action only, and you must roll to stabilize after a standard action.",
+  "Dying. Fortitude or Will save against DC 15 only; stabilize on 3 successes, die on 3 failures.",
+  "Dead."
+];
+const HEAL_NOTES = {
+  bashing:"Levels 1–3 heal in 24 hours each. Level 4 takes a week. Level 5 can take a month.",
+  stun:"Levels 1–3 heal in an hour each. Level 4 takes 8 hours. Level 5 takes a full day.",
+  lethal:"Level 1 can take 2 months. Level 2 takes six months to a year. Level 3 is gone unless CPR succeeds."
+};
+
+/* ---- standard actions -------------------------------------------------- */
+const STD_ACTIONS = [
+  ["Attack","Declare a melee or ranged attack and roll to hit."],
+  ["Grapple","Roll a melee attack. The opponent contests with a Reflex save against your roll. Strength modifier applies to both. Opponents get +1 after two rounds."],
+  ["Expression","Activate an expression, following its own conditions and limitations."],
+  ["Assist","Add half your relevant modifier to another player's roll. This uses your action for the round."],
+  ["Wait","Hold until the next round, then act first in the order."],
+  ["Guard","+3 to your Defense."],
+  ["Use","Employ a skill or an object."],
+  ["Coup de grace","Finish an incapacitated opponent. Doesn't have to be lethal."],
+  ["Revive","Bring an unconscious person back to consciousness."]
+];
+const CRITS = [
+  ["Attack","Automatically hits, the opponent cannot apply their soak modifier, and they take one additional level of damage."],
+  ["Soak","No damage taken, plus a counter attack of opportunity."],
+  ["Use","A trained skill succeeds to the highest level possible."],
+  ["Saving throw","No damage taken, plus a counter action."]
+];
+const FUMBLES = [
+  ["Attack","The attack misses and you roll a soak without a damage modifier against DC 10. Fail and you take a level of the damage you were dealing."],
+  ["Soak","Automatically incapacitated."],
+  ["Use","You fail to the worst level."],
+  ["Saving throw","The worst possible outcome."]
+];
+
+/* ---- backgrounds ------------------------------------------------------- */
+const BG_RESOURCES = [
+  "No notable assets beyond the everyday.",
+  "Middle class for your area, 60–100k. A car, a two-bedroom rental, some disposable income.",
+  "Upper middle class, 120–170k. A house, two or three vehicles, one extravagant purchase a month.",
+  "Wealthy, 200k+. Multiple homes and vehicles. Most assets replaceable within a month.",
+  "Millionaire. You purchase and spend at that level.",
+  "The 1%. You can afford anything that is for sale."
+];
+const BG_REPUTATION = [
+  "Unknown. Nobody has heard of you.",
+  "Somewhat known. An up and comer, or one great job people in the know heard about. +1 to social rolls.",
+  "Known. Established as someone not to be messed with. +2 to social rolls.",
+  "Distinguished. One of the best at what you do. +3 to social rolls.",
+  "Famous. People know you without an introduction. +4 to social rolls.",
+  "Legendary. The recognised master of your craft. +5 to social rolls."
+];
+
+const XP_COST = {attr:1, save:2, combat:2, skill:0.5, slot:10, background:2};
+const START_XP = 60;
+
+const GAME_MODES = ["Lore mode","Time skip mode","Adventure mode"];
+
+const LEXICON = [
+  ["Expression","A unique display of a power from a Neverborn."],
+  ["Rent","The monthly requirement that keeps you hidden from the Forces of Order."],
+  ["Crew","A team of Neverborn who come together to complete jobs."],
+  ["The Grind","Securing jobs in order to pay rent."],
+  ["Badwill","Morally questionable jobs taken to pay rent. Still counts."],
+  ["Evicted","When a Neverborn can't make rent and the Forces of Order collect."],
+  ["Death spree","Recklessly using your abilities."],
+  ["Steel piping","Using a proficiency 3 expression."],
+  ["Front man","The de facto leader of a crew."],
+  ["Oldtaku","An older Neverborn who acts as a mentor."],
+  ["The Deadbeats","Your non-human parent."],
+  ["Ostriches","Normal humans."]
+];
+/* =========================================================================
+   State, storage and derived maths
+   ========================================================================= */
+
+const S = {
+  ready:false, db:null, user:null, downloads:null,
+  me:{id:null, name:""}, localMode:false,
+  campaign:null,           // {code,name,gmId,mode,prof,rentDay,rentDue,tiers,gear}
+  chars:[],                // every character in the campaign
+  charId:null,             // the sheet currently open
+  view:"dashboard",
+  modal:null,
+  toast:null,
+  profileCache:{},
+  unsub:[],
+  forge:null,              // in-progress expression
+  dirty:false
+};
+
+const uid = (p) => p + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+const num = (v, d=0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : d; };
+const esc = (s) => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sign = (n) => (n >= 0 ? "+" : "") + n;
+const nf = (n) => Number(n).toLocaleString();
+
+/* ---------- storage ------------------------------------------------------ */
+const LS_KEY = "neverborn.local.v1";
+function localRead(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch(e){ return null; }
+}
+function localWrite(obj){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); } catch(e){}
+}
+
+async function saveCampaign(){
+  if(!S.campaign) return;
+  S.campaign.updatedAt = Date.now();
+  if(S.db && !S.localMode){
+    try { await S.db.doc("campaigns/" + S.campaign.code).set(stripUndef(S.campaign)); }
+    catch(e){ handleWriteError(e); }
+  } else {
+    const blob = localRead() || {};
+    blob.campaign = S.campaign; blob.chars = S.chars; localWrite(blob);
+  }
+}
+
+let saveTimer = null;
+function saveChar(c, immediate){
+  if(!c) return;
+  c.updatedAt = Date.now();
+  S.dirty = true;
+  clearTimeout(saveTimer);
+  const go = async () => {
+    S.dirty = false;
+    if(S.db && !S.localMode){
+      try { await S.db.doc("characters/" + c.id).set(stripUndef(c)); }
+      catch(e){ handleWriteError(e); }
+    } else {
+      const blob = localRead() || {};
+      blob.campaign = S.campaign; blob.chars = S.chars; localWrite(blob);
+    }
+  };
+  if(immediate) go(); else saveTimer = setTimeout(go, 700);
+}
+
+let writeBlocked = false;
+function handleWriteError(e){
+  const code = e && e.code;
+  if(code === "permission-denied"){
+    toast("Firestore refused that write. Check that your security rules match the ones in firestore.rules.");
+  } else if(code === "resource-exhausted"){
+    toast("This Firebase project has hit its free-tier quota for today. It resets in a few hours.");
+  } else if(code === "unavailable" || code === "deadline-exceeded"){
+    toast("Couldn't reach Firebase. Check your connection and try again.");
+  } else if(code === "unauthenticated"){
+    toast("Your session dropped. Reloading the page usually fixes this.");
+  } else {
+    toast("That change didn't save. Open the browser console for details.");
+  }
+}
+
+function stripUndef(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* ---------- character model --------------------------------------------- */
+function newCharacter(ownerId, campaignCode, prof){
+  const c = {
+    id: uid("ch_"), ownerId, ownerName: (S.me && S.me.name) || "", campaign: campaignCode,
+    createdAt: Date.now(), updatedAt: Date.now(),
+    name:"", styleKey:"death", prof: prof || 1,
+    height:"", weight:"", hair:"", gender:"", age:"", eyes:"",
+    backstory:"", portrait:"",
+    attrs:{str:10,dex:10,con:10,int:10,wis:10,cha:10},
+    attrTemp:{str:0,dex:0,con:0,int:0,wis:0,cha:0},
+    saveBase:{will:0,reflex:0,fortitude:0},
+    saveMisc:{will:0,reflex:0,fortitude:0},
+    combat:{defense:0,initiative:0,soak:0,melee:0,ranged:0},
+    combatExpr:{defense:0,initiative:0,soak:0,melee:0,ranged:0},
+    skills:{}, subSkills:[],
+    expressions:[], extraSlots:0,
+    gear:[], customGear:[],
+    bg:{resources:0, reputation:0}, contacts:[],
+    dmg:{bashing:0,stun:0,lethal:0},
+    xpEarned: START_XP, xpLog:[{delta:START_XP, note:"Character creation", at:Date.now()}],
+    debtLog:[], goodwill:0, standingRent:0,
+    allowGmEdit:false
+  };
+  SKILLS.forEach(s => { if(!s.sub) c.skills[s.k] = {ranks:0, misc:0}; });
+  return c;
+}
+
+function migrate(c){
+  if(!c) return c;
+  const base = newCharacter(c.ownerId, c.campaign, c.prof);
+  for(const k of Object.keys(base)){
+    if(c[k] === undefined) c[k] = base[k];
+    else if(base[k] && typeof base[k] === "object" && !Array.isArray(base[k])){
+      for(const kk of Object.keys(base[k])) if(c[k][kk] === undefined) c[k][kk] = base[k][kk];
+    }
+  }
+  return c;
+}
+
+const curChar = () => S.chars.find(c => c.id === S.charId) || null;
+const isGM = () => !!(S.campaign && S.me.id && S.campaign.gmId === S.me.id);
+const ownsChar = (c) => !!(c && S.me.id && c.ownerId === S.me.id);
+function canEditChar(c){
+  if(!c) return false;
+  if(writeBlocked) return false;
+  if(S.localMode) return true;
+  if(ownsChar(c)) return true;
+  if(isGM() && c.allowGmEdit) return true;
+  return false;
+}
+
+/* ---------- derived maths ------------------------------------------------ */
+const attrMod = (score) => Math.floor((num(score,10) - 10) / 2);
+
+function attrModOf(c, k){ return attrMod(num(c.attrs[k],10)) + num(c.attrTemp[k],0); }
+
+function bestAttrMod(c, keys){
+  return Math.max(...keys.map(k => attrModOf(c, k)));
+}
+
+/* Damage penalty: the worse of the bashing and stun tracks, per the book. */
+function dmgPenalty(c){
+  const worst = Math.max(num(c.dmg.bashing,0), num(c.dmg.stun,0));
+  if(worst >= 5) return -2;
+  if(worst >= 4) return -2;
+  if(worst === 3) return -2;
+  if(worst === 2) return -1;
+  return 0;
+}
+
+function saveTotal(c, k){
+  const s = SAVES.find(x => x.k === k);
+  return num(c.saveBase[k],0) + attrModOf(c, s.attr) + num(c.saveMisc[k],0) + dmgPenalty(c);
+}
+
+function combatTotal(c, k){
+  const def = COMBAT.find(x => x.k === k);
+  let v = def.base + num(c.combat[k],0) + num(c.combatExpr[k],0);
+  if(def.attr){
+    const m = attrModOf(c, def.attr);
+    v += def.half ? Math.floor(m / 2) : m;
+  }
+  if(k !== "defense" && k !== "soak") v += dmgPenalty(c);
+  else if(k === "defense") v += 0;
+  return v;
+}
+
+function socialBonus(c){ return num(c.bg.reputation,0); }
+
+function skillTotal(c, key, entry){
+  const def = SKILLS.find(s => s.k === key);
+  if(!def) return 0;
+  const ranks = num(entry.ranks,0), misc = num(entry.misc,0);
+  let t = ranks + bestAttrMod(c, def.attr) + misc;
+  if(def.social) t += socialBonus(c);
+  return t;
+}
+
+function allSkillRows(c){
+  const rows = [];
+  SKILLS.forEach(s => {
+    if(s.sub){
+      c.subSkills.filter(x => x.key === s.k).forEach(x => rows.push({def:s, id:x.id, label:x.label, entry:x, sub:true}));
+    } else {
+      rows.push({def:s, id:s.k, label:s.n, entry:c.skills[s.k] || {ranks:0,misc:0}, sub:false});
+    }
+  });
+  return rows;
+}
+
+/* ---------- XP ledger ---------------------------------------------------- */
+function xpSpent(c){
+  let t = 0, parts = [];
+  let a = 0; ATTRS.forEach(x => { a += num(c.attrs[x.k],10) - 10; });
+  t += a * XP_COST.attr; parts.push(["Attributes", a * XP_COST.attr]);
+
+  let sv = 0; SAVES.forEach(x => sv += Math.max(0, num(c.saveBase[x.k],0)));
+  t += sv * XP_COST.save; parts.push(["Saves", sv * XP_COST.save]);
+
+  let cb = 0; COMBAT.forEach(x => cb += Math.max(0, num(c.combat[x.k],0)));
+  t += cb * XP_COST.combat; parts.push(["Combat stats", cb * XP_COST.combat]);
+
+  let ranks = 0;
+  Object.values(c.skills).forEach(e => ranks += Math.max(0, num(e.ranks,0)));
+  c.subSkills.forEach(e => ranks += Math.max(0, num(e.ranks,0)));
+  const skillXp = Math.ceil(ranks / 2);
+  t += skillXp; parts.push(["Skills (" + ranks + " ranks)", skillXp]);
+
+  const bgLv = num(c.bg.resources,0) + num(c.bg.reputation,0) + c.contacts.length;
+  t += bgLv * XP_COST.background; parts.push(["Backgrounds", bgLv * XP_COST.background]);
+
+  const slotXp = num(c.extraSlots,0) * XP_COST.slot;
+  t += slotXp; parts.push(["Extra expression slots", slotXp]);
+
+  return {total:t, parts};
+}
+function xpAvailable(c){ return num(c.xpEarned, START_XP) - xpSpent(c).total; }
+
+function slotsUsed(c){
+  return c.expressions.reduce((n, e) => n + (e.isExpansion ? 0 : num(e.prof,1)), 0);
+}
+function slotsTotal(c){ return 3 + num(c.extraSlots,0); }
+
+/* ---------- debt calculator --------------------------------------------- */
+function bandedCost(qty, bandSize){
+  let total = 0, i = 0, left = Math.max(0, qty);
+  while(left > 0 && i < 400){ i++; const take = Math.min(left, bandSize); total += take * i; left -= take; }
+  return total;
+}
+
+function blankExpression(power, prof){
+  return {
+    id: uid("ex_"), name:"", power, prof: prof || 1, desc:"",
+    tier: 30, living:false,
+    scales:{}, velocity:1, escalate:0,
+    aoeFeet:0, aoeMutable:0, offsetFeet:0, loops:0,
+    linkPort:0, linkDist:0, linkObject:"",
+    conds:[], condSave:0, limits:[], range:"minds-eye",
+    tradeoff:false, isExpansion:false, parentId:"",
+    customCore:null, customNote:"",
+    status:"draft", gmNote:"", submittedAt:0
+  };
+}
+
+/* Order of operations, mirrored in the ledger the player sees:
+   core → living → escalate (multiplies the running total) → velocity
+   (seconds cost only) → area, offset, looping → reductions → floor of 1. */
+function computeDebt(e){
+  const L = [];
+  const power = e.power;
+  const prof = clamp(num(e.prof,1), 1, 3);
+  const trade = !!e.tradeoff;
+  let core = 0;
+
+  if(e.customCore != null && e.customCore !== ""){
+    core = num(e.customCore, 0);
+    L.push(["Custom core cost", core]);
+  } else if(power === "Endings"){
+    let tier = num(e.tier, 30);
+    if(trade && prof === 1) tier = Math.ceil(tier / 2);
+    if(trade && prof === 2) tier = Math.ceil(tier / 3);
+    core = Math.max(tier, PROF_BASE[prof]);
+    L.push(["Likelihood tier" + (trade ? " (traded)" : ""), tier]);
+    if(PROF_BASE[prof] > tier) L.push(["Proficiency " + prof + " floor", PROF_BASE[prof] - tier]);
+  } else {
+    core = PROF_BASE[prof];
+    L.push(["Proficiency " + prof + " base debt", PROF_BASE[prof]]);
+    let scaleCost = 0;
+    (SCALES[power] || []).forEach(s => {
+      const raw = num(e.scales[s.k], 0);
+      if(!raw) return;
+      let c = 0;
+      if(s.banded) c = bandedCost(raw, s.banded);
+      else c = raw * s.per;
+      c = Math.ceil(c);
+      scaleCost += c;
+      L.push([s.n + " — " + nf(raw) + " " + s.unit, c]);
+    });
+    core += scaleCost;
+    e.__scaleCost = scaleCost;
+  }
+
+  let running = core;
+
+  if(power === "Endings" && e.living){ running += 20; L.push(["Used on a living creature", 20]); }
+
+  const steps = clamp(num(e.escalate,0), 0, 8);
+  if(steps > 0 && ["Lumen","Mass","Flow","Exchange"].includes(power)){
+    const before = running;
+    running = running * Math.pow(2, steps);
+    L.push(["Escalate ×" + Math.pow(2,steps) + " (" + steps + " step" + (steps>1?"s":"") + ")", running - before]);
+  }
+
+  if(power === "Flow"){
+    const v = Math.max(1, num(e.velocity,1));
+    if(v > 1){
+      const sc = num(e.__scaleCost, 0);
+      const delta = Math.ceil(sc * (v - 1));
+      running += delta;
+      L.push(["Velocity ×" + v + " on the seconds cost", delta]);
+    }
+  }
+
+  if(power !== "Law"){
+    const ft = Math.max(0, num(e.aoeFeet,0));
+    const mut = clamp(num(e.aoeMutable,0), 0, ft);
+    if(ft){ running += ft; L.push(["Area of effect — " + ft + " ft", ft]); }
+    if(mut){ running += mut; L.push(["Mutable shape over " + mut + " ft (doubled)", mut]); }
+  }
+  const off = Math.max(0, num(e.offsetFeet,0));
+  if(off){ running += off; L.push(["Offset origin — " + off + " ft", off]); }
+
+  const loops = clamp(num(e.loops,0), 0, 10);
+  if(loops){ running += loops * 10; L.push(["Looping ×" + loops, loops * 10]); }
+
+  const gross = running;
+  let red = 0;
+  const addRed = (v, label) => { if(v){ red += v; L.push([label, v]); } };
+  addRed(num(e.linkPort,0), "Linked object — portability");
+  addRed(num(e.linkDist,0), "Linked object — distinctiveness");
+  (e.conds||[]).forEach(c => addRed(num(c.v,0), "Condition — " + (c.text || (COND_TIERS.find(t=>t.v===num(c.v,0))||{}).n || "")));
+  addRed(num(e.condSave,0), "Condition — saving throw");
+  (e.limits||[]).forEach(c => addRed(num(c.v,0), "Limitation — " + (c.text || (LIMIT_TIERS.find(t=>t.v===num(c.v,0))||{}).n || "")));
+  const r = RANGES.find(x => x.k === e.range);
+  if(r && r.v) addRed(r.v, "Range limited to " + r.n.toLowerCase());
+
+  let final = gross + red;
+  let expansionSaving = 0;
+  if(e.isExpansion){
+    const before = Math.max(1, final);
+    final = Math.ceil(before / 2);
+    expansionSaving = final - before;
+    L.push(["Expansion of an existing expression (half price)", expansionSaving]);
+  }
+  const floored = final < 1;
+  final = Math.max(1, Math.round(final));
+
+  return {
+    lines: L, gross, reductions: red, final, floored,
+    monthly: trade ? final : 0,
+    activation: trade ? Math.max(1, Math.ceil(final * 0.2)) : 0
+  };
+}
+
+/* Action type is derived from the conditions taken, per the rules. */
+function actionOf(e){
+  const vs = (e.conds||[]).map(c => num(c.v,0));
+  if(vs.includes(-15)) return "full";
+  if(vs.includes(-10)) return "standard";
+  if(vs.length) return "triggered";
+  return "free";
+}
+
+function freeActions(c){
+  return Math.max(1, Math.max(attrModOf(c,"int"), attrModOf(c,"dex")));
+}
+
+function monthlyRent(c){
+  let t = num(c.standingRent,0);
+  c.expressions.forEach(e => { if(e.tradeoff) t += computeDebt(e).monthly; });
+  return t;
+}
+function debtThisMonth(c){
+  return (c.debtLog||[]).reduce((n,l) => n + num(l.amount,0), 0) + monthlyRent(c);
+}
+
+/* Campaign-wide budget, set by the GM. 0 means "not set yet" — no red
+   warnings fire until the GM actually picks a number. */
+function campaignBudget(){ return S.campaign ? num(S.campaign.goodwillBudget,0) : 0; }
+function budgetIsSet(){ return campaignBudget() > 0; }
+function overBudget(c){
+  const budget = campaignBudget();
+  if(budget <= 0) return {set:false, over:false, budget:0, owed:debtThisMonth(c), diff:0};
+  const owed = debtThisMonth(c);
+  return {set:true, over: owed > budget, budget, owed, diff: owed - budget};
+}
+
+/* Predicted damage tier from whatever scale the expression uses. */
+function predictedTier(e, tiers){
+  let kind = null, val = 0;
+  if(e.power === "Mass" && num(e.scales.kg,0)){ kind = "kg"; val = num(e.scales.kg,0); }
+  else if(e.power === "Exchange" && num(e.scales.j,0)){ kind = "j"; val = num(e.scales.j,0); }
+  else if(e.power === "Exchange" && num(e.scales.n,0)){ kind = "n"; val = num(e.scales.n,0); }
+  if(kind == null) return null;
+  const t = tierFor(kind, val);
+  if(t == null) return null;
+  return (tiers || DEFAULT_TIERS).find(x => x.t === t) || null;
+}
+function tierEffect(t){
+  if(!t) return "";
+  if(t.type === "lethal"){
+    return "Lethal, " + t.lv + " level" + (t.lv === 1 ? "" : "s") + (t.mod ? ", soak DC +" + t.mod : "");
+  }
+  return "Bashing" + (t.mod ? " +" + t.mod : " +0") + " damage modifier";
+}
+/* =========================================================================
+   Render core
+   ========================================================================= */
+const APP = document.getElementById("app");
+
+function toast(msg){
+  S.toast = msg;
+  render();
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { S.toast = null; render(); }, 4200);
+}
+
+let _focus = null;
+function captureFocus(){
+  const el = document.activeElement;
+  if(el && el.dataset && el.dataset.fk){
+    _focus = {fk: el.dataset.fk, s: el.selectionStart, e: el.selectionEnd};
+  } else _focus = null;
+}
+function restoreFocus(){
+  if(!_focus) return;
+  const el = APP.querySelector('[data-fk="' + CSS.escape(_focus.fk) + '"]');
+  if(el){
+    el.focus();
+    try { if(_focus.s != null && el.setSelectionRange) el.setSelectionRange(_focus.s, _focus.e); } catch(err){}
+  }
+  _focus = null;
+}
+
+function render(){
+  captureFocus();
+  APP.innerHTML = viewRoot();
+  restoreFocus();
+}
+
+function viewRoot(){
+  if(!S.ready) return '<div class="landing"><p class="logo">Neverborn</p><p class="tag">Waking up…</p></div>';
+  if(!S.me.id) return viewAuth();
+  if(!S.campaign) return viewCampaignsList();
+  let body;
+  const c = curChar();
+  switch(S.view){
+    case "dashboard": body = viewDashboard(); break;
+    case "overview":  body = c ? viewOverview(c) : viewNoChar(); break;
+    case "stats":     body = c ? viewStats(c) : viewNoChar(); break;
+    case "skills":    body = c ? viewSkills(c) : viewNoChar(); break;
+    case "expressions": body = c ? viewExpressions(c) : viewNoChar(); break;
+    case "gear":      body = c ? viewGear(c) : viewNoChar(); break;
+    case "background":body = c ? viewBackground(c) : viewNoChar(); break;
+    case "play":      body = c ? viewPlay(c) : viewNoChar(); break;
+    case "xp":        body = c ? viewXp(c) : viewNoChar(); break;
+    case "sheet":     body = c ? viewSheet(c) : viewNoChar(); break;
+    case "approvals": body = viewApprovals(); break;
+    case "campaign":  body = viewCampaign(); break;
+    case "reference": body = viewReference(); break;
+    default: body = viewDashboard();
+  }
+  return '<div class="shell">' + viewSpine() + '<div class="main">' + viewMobNav() + viewStatbar() +
+         '<div class="page">' + body + '</div>' +
+         (S.toast ? '<div class="toast">' + esc(S.toast) + '</div>' : '') +
+         '</div></div>' + (S.modal ? viewModal() : '');
+}
+
+/* ---------- navigation --------------------------------------------------- */
+function navItems(){
+  const c = curChar();
+  const pend = pendingApprovals().length;
+  const items = [
+    {g:"Crew", v:"dashboard", i:"◆", n:"Campaign"},
+  ];
+  if(isGM()) items.push({g:"Crew", v:"approvals", i:"✎", n:"Approvals", cnt:pend});
+  if(isGM()) items.push({g:"Crew", v:"campaign", i:"⚙", n:"Settings"});
+  if(c){
+    items.push({g:"Character", v:"overview", i:"☰", n:"Overview"});
+    items.push({g:"Character", v:"stats", i:"▤", n:"Stats and saves"});
+    items.push({g:"Character", v:"skills", i:"✦", n:"Skills"});
+    items.push({g:"Character", v:"expressions", i:"⚡", n:"Expressions"});
+    items.push({g:"Character", v:"gear", i:"▣", n:"Equipment"});
+    items.push({g:"Character", v:"background", i:"❖", n:"Backgrounds"});
+    items.push({g:"Character", v:"xp", i:"↑", n:"XP ledger"});
+    items.push({g:"Play", v:"play", i:"▶", n:"Session tracker"});
+    items.push({g:"Play", v:"sheet", i:"⎙", n:"Sheet and export"});
+  }
+  items.push({g:"Play", v:"reference", i:"?", n:"Rules reference"});
+  return items;
+}
+
+function viewSpine(){
+  const items = navItems();
+  let html = '<nav class="spine"><div class="spine-logo"><b>Neverborn</b><span>Character builder</span></div>';
+  let lastG = null;
+  items.forEach(it => {
+    if(it.g !== lastG){ if(lastG) html += '</div>'; html += '<div class="navgroup"><h4>' + esc(it.g) + '</h4>'; lastG = it.g; }
+    html += '<button class="navitem ' + (S.view === it.v ? "on" : "") + '" data-act="nav" data-v="' + it.v + '">' +
+            '<span class="ico" aria-hidden="true">' + it.i + '</span>' + esc(it.n) +
+            (it.cnt ? '<span class="cnt">' + it.cnt + '</span>' : '') + '</button>';
+  });
+  html += '</div>';
+  html += '<div class="spine-foot">';
+  html += '<div class="whoami"><span>Signed in as <b style="color:#fff">' + esc(S.me.name) + '</b></span></div>';
+  html += '<button class="linklike" data-act="signout" style="background:none;border:0;color:rgba(255,255,255,.55);text-decoration:underline;cursor:pointer;font-size:11px;padding:0;margin-bottom:8px">Log out</button>';
+  if(S.campaign){
+    html += '<div style="margin-top:6px">' + esc(S.campaign.name) +
+      '<br><span style="opacity:.7">Code ' + esc(S.campaign.code) + '</span></div>';
+  }
+  if(S.localMode) html += '<br><span style="opacity:.7">Demo mode — Firebase isn\'t configured yet. Accounts are stored on this device only.</span>';
+  html += '<div class="row" style="margin-top:8px;gap:6px">' +
+    (S.campaign ? '<button data-act="backtolist" style="flex:1;margin-top:0">My campaigns</button>' : '') +
+    '<button class="themebtn" data-act="theme" title="Toggle light / dark">' + (curTheme() === "dark" ? "☀" : "🌙") + '</button></div>';
+  html += '</div>';
+  return html + '</nav>';
+}
+function curTheme(){
+  return localStorage.getItem("neverborn.theme") || "system";
+}
+
+function viewMobNav(){
+  const items = navItems();
+  return '<div class="mobnav">' + items.map(it =>
+    '<button class="' + (S.view === it.v ? "on" : "") + '" data-act="nav" data-v="' + it.v + '">' + esc(it.n) +
+    (it.cnt ? ' (' + it.cnt + ')' : '') + '</button>').join("") + '</div>';
+}
+
+/* ---------- persistent stat bar ------------------------------------------ */
+function viewStatbar(){
+  const c = curChar();
+  if(!c){
+    return '<div class="statbar"><span class="who">' + esc(S.campaign.name) + '</span>' +
+      '<span class="chip">' + esc(S.campaign.mode) + '</span>' +
+      '<span class="chip">Proficiency ' + S.campaign.prof + '</span>' +
+      '<span class="spacer"></span>' + rentChip() + '</div>';
+  }
+  const st = STYLES[c.styleKey];
+  const pen = dmgPenalty(c);
+  const avail = xpAvailable(c);
+  let h = '<div class="statbar"><span class="who">' + esc(c.name || "Unnamed") + '</span>';
+  h += '<span class="chip hi">' + esc(st.nick) + ' · ' + esc(st.power.toLowerCase()) + '</span>';
+  ATTRS.forEach(a => {
+    const m = attrModOf(c, a.k);
+    h += '<span class="chip">' + a.n.slice(0,3) + ' <b>' + num(c.attrs[a.k],10) + '</b> <span class="muted">' + sign(m) + '</span></span>';
+  });
+  h += '<span class="chip hi">Def <b>' + combatTotal(c,"defense") + '</b></span>';
+  h += '<span class="chip hi">Soak <b>' + sign(combatTotal(c,"soak")) + '</b></span>';
+  h += '<span class="chip hi">Init <b>' + sign(combatTotal(c,"initiative")) + '</b></span>';
+  if(pen) h += '<span class="chip bad">Injury ' + pen + '</span>';
+  h += '<span class="spacer"></span>' + rentChip();
+  h += '<div class="xpbox"><small>XP left</small><b>' + avail + '</b></div>';
+  return h + '</div>';
+}
+
+function rentChip(){
+  const days = daysToRent();
+  if(days == null) return "";
+  const cls = days <= 3 ? "bad" : days <= 7 ? "warn" : "";
+  return '<span class="chip ' + cls + '">Rent in <b>' + days + '</b> day' + (days === 1 ? "" : "s") + '</span>';
+}
+function daysToRent(){
+  if(!S.campaign || !S.campaign.rentDue) return null;
+  const ms = S.campaign.rentDue - Date.now();
+  return Math.max(0, Math.ceil(ms / 86400000));
+}
+
+function viewNoChar(){
+  return '<div class="empty"><p>No character open.</p><button class="btn primary" data-act="nav" data-v="dashboard">Back to the crew</button></div>';
+}
+
+/* ---------- auth screen --------------------------------------------------- */
+function viewAuth(){
+  const mode = S.authView || "signin"; // signin | signup | forgot
+  let h = '<div class="landing"><p class="logo">Neverborn</p>' +
+    '<p class="tag">You are not supposed to exist. Sign in to build the thing that does anyway.</p>';
+
+  h += '<div class="card">';
+
+  if(mode !== "forgot"){
+    h += '<div class="authtabs">' +
+      '<button class="' + (mode==="signin"?"on":"") + '" data-act="authtab" data-m="signin">Log in</button>' +
+      '<button class="' + (mode==="signup"?"on":"") + '" data-act="authtab" data-m="signup">Sign up</button>' +
+      '</div>';
+
+    h += '<button class="btn google" data-act="authgoogle" ' + (S.localMode ? 'disabled title="Set up Firebase first — see SETUP.md"' : '') + '>' +
+      '<svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.3 2.7l6-6C33.5 6.5 29 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.4-.3-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 16 18.9 13 24 13c2.8 0 5.3 1 7.3 2.7l6-6C33.5 6.5 29 4.5 24 4.5c-7.6 0-14.1 4.3-17.4 10.6z"/><path fill="#4CAF50" d="M24 43.5c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 34.6 26.7 35.5 24 35.5c-5.3 0-9.7-3.6-11.3-8.4l-6.6 5.1C9.8 39.1 16.4 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.2C41 35.4 43.5 30.1 43.5 24c0-1.2-.1-2.4-.3-3.5z"/></svg>' +
+      (mode==="signup" ? "Sign up with Google" : "Continue with Google") + '</button>';
+    h += '<div class="orline">or</div>';
+
+    h += '<label class="fl">Email</label><input type="text" id="authemail" data-fk="authemail" autocomplete="email">';
+    if(mode === "signup"){
+      h += '<label class="fl" style="margin-top:9px">What should the table call you?</label>' +
+        '<input type="text" id="authname" data-fk="authname" placeholder="Marisol" maxlength="40">';
+    }
+    h += '<label class="fl" style="margin-top:9px">Password</label><input type="password" id="authpw" data-fk="authpw" autocomplete="' + (mode==="signup"?"new-password":"current-password") + '">';
+    if(mode === "signup"){
+      h += '<label class="fl" style="margin-top:9px">Confirm password</label><input type="password" id="authpw2" data-fk="authpw2" autocomplete="new-password">';
+    }
+
+    h += '<div class="row" style="margin-top:12px">' +
+      '<button class="btn primary" style="width:100%" data-act="' + (mode==="signup"?"authsignup":"authsignin") + '">' +
+      (mode==="signup" ? "Create account" : "Log in") + '</button></div>';
+
+    if(mode === "signin"){
+      h += '<div style="margin-top:10px;text-align:right"><button class="authlink" data-act="authtab" data-m="forgot">Forgot your password?</button></div>';
+    }
+    h += '<p class="tiny muted" style="margin:12px 0 0">No email is ever shown to other players — only the name you give above.</p>';
+  } else {
+    h += '<h3 class="sub" style="margin-bottom:9px">Reset your password</h3>' +
+      '<label class="fl">Email</label><input type="text" id="authemail" data-fk="authemail" autocomplete="email">' +
+      '<div class="row" style="margin-top:12px"><button class="btn primary" style="width:100%" data-act="authforgot">Send reset link</button></div>' +
+      '<div style="margin-top:10px"><button class="authlink" data-act="authtab" data-m="signin">Back to log in</button></div>' +
+      (S.localMode ? '<p class="tiny muted" style="margin:10px 0 0">Demo mode has no real email — your password is just stored on this device. There\'s nothing to reset here until Firebase is set up.</p>' : '');
+  }
+  h += '</div>';
+  if(S.localMode) h += '<p class="tiny muted" style="margin-top:16px">Firebase isn\'t configured in this file yet, so accounts here are a local-only demo. See SETUP.md to make this real and shareable.</p>';
+  h += '</div>';
+  return h;
+}
+
+/* ---------- my campaigns (home after login) ------------------------------- */
+function viewCampaignsList(){
+  const gm = (S.myCampaigns || []).filter(c => c.gmId === S.me.id);
+  const playing = (S.myCampaigns || []).filter(c => c.gmId !== S.me.id);
+  let h = '<div class="landing" style="max-width:760px;text-align:left">' +
+    '<div class="row"><p class="logo" style="margin:0">Neverborn</p>' +
+    '<span class="right row" style="gap:10px">' +
+    '<span class="tiny muted">Signed in as ' + esc(S.me.name) + '</span>' +
+    '<button class="themebtn" data-act="theme" title="Toggle light / dark" style="border-color:var(--rule-strong);color:var(--ink)">' + (curTheme() === "dark" ? "☀" : "🌙") + '</button>' +
+    '<button class="btn ghost sm" data-act="signout">Log out</button>' +
+    '</span></div>' +
+    '<p class="tag">Pick a campaign, or start something new.</p>';
+
+  h += '<div class="grid g2">';
+  h += '<div class="card tape"><h2 class="sec">Start a crew</h2>' +
+    '<p class="tiny muted">You run it. Players join with the code and you approve their expressions.</p>' +
+    '<label class="fl">Campaign name</label>' +
+    '<input type="text" data-fk="newcamp" id="newcampname" placeholder="The Ashtray Six">' +
+    '<div class="row" style="margin-top:9px">' +
+    '<div style="flex:1;min-width:130px"><label class="fl">Game mode</label><select id="newcampmode">' +
+      GAME_MODES.map(m => '<option>' + m + '</option>').join("") + '</select></div>' +
+    '<div style="flex:1;min-width:130px"><label class="fl">Proficiency level</label><select id="newcampprof">' +
+      '<option value="1">1 — science logic</option><option value="2">2 — comic logic</option><option value="3">3 — your logic</option>' +
+      '</select></div></div>' +
+    '<div class="row" style="margin-top:11px"><button class="btn primary" data-act="createcamp">Create campaign</button></div>' +
+    '</div>';
+  h += '<div class="card"><h2 class="sec">Join a crew</h2>' +
+    '<label class="fl">Campaign code</label>' +
+    '<input type="text" data-fk="joincode" id="joincode" placeholder="ABCD12" style="text-transform:uppercase">' +
+    '<div class="row" style="margin-top:11px"><button class="btn" data-act="joincamp">Join</button></div>' +
+    '</div>';
+  h += '</div>';
+
+  h += '<h2 class="sec" style="margin-top:20px">Running as GM</h2>';
+  if(!gm.length) h += '<div class="empty"><p>You\'re not running anything yet.</p></div>';
+  else {
+    h += '<div class="grid g3">' + gm.map(campCard).join("") + '</div>';
+  }
+
+  h += '<h2 class="sec" style="margin-top:20px">Playing in</h2>';
+  if(!playing.length) h += '<div class="empty"><p>You haven\'t joined a table as a player yet.</p></div>';
+  else {
+    h += '<div class="grid g3">' + playing.map(campCard).join("") + '</div>';
+  }
+
+  if(S.localMode) h += '<p class="tiny muted" style="margin-top:16px">Demo mode — this list is saved on this device only. See SETUP.md to make it real and shareable.</p>';
+  h += '</div>';
+  return h;
+}
+function campCard(cp){
+  const isGm = cp.gmId === S.me.id;
+  return '<div class="crewcard" data-act="entercamp" data-code="' + esc(cp.code) + '">' +
+    '<div class="row" style="margin-bottom:5px"><h4 style="flex:1">' + esc(cp.name) + '</h4>' +
+    '<span class="rolebadge ' + (isGm?"gm":"player") + '">' + (isGm?"GM":"Player") + '</span></div>' +
+    '<div class="styl">' + esc(cp.mode || "") + ' · proficiency ' + cp.prof + '</div>' +
+    '<div class="tiny muted">Code ' + esc(cp.code) + (isGm ? "" : " · run by " + esc(cp.gmName||"")) + '</div>' +
+    '</div>';
+}
+
+/* ---------- campaign dashboard (home) ------------------------------------ */
+function viewDashboard(){
+  const mine = S.chars.filter(c => ownsChar(c));
+  const others = S.chars.filter(c => !ownsChar(c));
+  const me = mine[0];
+  const days = daysToRent();
+  let h = '<div class="banner"><span>' + esc(S.campaign.name) + '</span></div>';
+
+  h += '<div class="grid g3" style="margin-bottom:14px">';
+  h += '<div class="card" style="' + (days != null && days <= 3 ? 'border-color:var(--red);' : '') + '">' +
+       '<h3 class="sub">Rent due in</h3><p class="bigdebt" style="' + (days != null && days <= 3 ? '' : 'color:var(--ink)') + '">' +
+       (days == null ? "—" : days) + '</p><p class="tiny muted" style="margin:2px 0 0">' +
+       (days == null ? "No rent day set." : "days") + '</p></div>';
+  if(me){
+    const owed = debtThisMonth(me), earned = num(me.goodwill,0);
+    const pct = owed > 0 ? clamp(Math.round(earned / owed * 100), 0, 100) : 100;
+    const ob = overBudget(me);
+    h += '<div class="card" style="' + (ob.over ? "border-color:var(--red)" : "") + '"><h3 class="sub">Your debt this month</h3><p class="bigdebt" style="color:' + (ob.over ? "var(--red)" : "var(--ink)") + '">' + nf(owed) + '</p>' +
+         '<p class="tiny muted" style="margin:2px 0 6px">' + nf(num(me.standingRent,0) + me.expressions.filter(e=>e.tradeoff).reduce((n,e)=>n+computeDebt(e).monthly,0)) + ' standing, ' + nf(owed - (num(me.standingRent,0) + me.expressions.filter(e=>e.tradeoff).reduce((n,e)=>n+computeDebt(e).monthly,0))) + ' spent' +
+         (ob.set ? (ob.over ? ' · <span style="color:var(--red)">' + nf(ob.diff) + ' over the ' + nf(ob.budget) + ' campaign budget</span>' : ' · within the ' + nf(ob.budget) + ' campaign budget') : '') + '</p>' +
+         '<div class="meter"><i class="' + (pct >= 100 ? "ok" : "") + '" style="width:' + pct + '%"></i></div></div>';
+    h += '<div class="card"><h3 class="sub">Goodwill earned</h3><p class="bigdebt" style="color:' + (earned >= owed ? 'var(--green)' : 'var(--ink)') + '">' + nf(earned) + '</p>' +
+         '<p class="tiny muted" style="margin:2px 0 0">' + (earned >= owed ? "Rent covered." : nf(owed - earned) + " short") + '</p></div>';
+  } else {
+    h += '<div class="card"><h3 class="sub">Your character</h3><p class="tiny muted">You haven\'t made one yet.</p>' +
+         '<button class="btn primary sm" data-act="newchar" style="margin-top:8px">Create a Neverborn</button></div>';
+    h += '<div class="card"><h3 class="sub">Proficiency</h3><p class="bigdebt" style="color:var(--ink)">' + S.campaign.prof + '</p>' +
+         '<p class="tiny muted" style="margin:2px 0 0">' + esc(PROF_TEXT[S.campaign.prof].split(".")[0]) + '</p></div>';
+  }
+  h += '</div>';
+
+  if(isGM()){
+    const pend = pendingApprovals();
+    if(pend.length){
+      h += '<div class="card" style="border-color:var(--gold);margin-bottom:14px"><h3 class="sub">Waiting on you</h3>' +
+        pend.slice(0,4).map(p => '<div class="row" style="padding:5px 0;border-bottom:1px solid var(--rule)">' +
+          '<div style="flex:1;min-width:0"><b>' + esc(p.e.name || "Untitled") + '</b> <span class="tiny muted">· ' + esc(p.c.name || "Unnamed") + '</span>' +
+          '<div class="tiny muted">' + esc(p.e.power) + ' p' + p.e.prof + ' · ' + computeDebt(p.e).final + ' debt · ' + ACTIONS[actionOf(p.e)].toLowerCase() + ' action</div></div>' +
+          '<button class="btn sm" data-act="review" data-c="' + p.c.id + '" data-e="' + p.e.id + '">Review</button></div>').join("") +
+        (pend.length > 4 ? '<p class="tiny muted" style="margin:8px 0 0">' + (pend.length - 4) + ' more in Approvals.</p>' : "") +
+        '</div>';
+    }
+  }
+
+  h += '<h2 class="sec">Crew</h2><div class="grid g3">';
+  const list = mine.concat(others);
+  if(!list.length){
+    h += '<div class="empty" style="grid-column:1/-1"><p>Nobody has joined yet.</p>' +
+         '<button class="btn primary" data-act="newchar">Create a Neverborn</button></div>';
+  }
+  list.forEach(c => {
+    const st = STYLES[c.styleKey];
+    const owed = debtThisMonth(c), earned = num(c.goodwill,0);
+    const short = owed - earned;
+    const ob = overBudget(c);
+    const lethal = num(c.dmg.lethal,0), bash = Math.max(num(c.dmg.bashing,0), num(c.dmg.stun,0));
+    let status;
+    if(short > 0) status = '<span class="tiny" style="color:var(--red)">' + nf(short) + ' short on rent</span>';
+    else status = '<span class="tiny" style="color:var(--green)">Rent covered</span>';
+    if(ob.over) status += ' · <span class="tiny" style="color:var(--red)">' + nf(ob.diff) + ' over budget</span>';
+    let injury = "";
+    if(lethal) injury = '<span class="tiny" style="color:var(--red)">' + lethal + ' lethal taken</span>';
+    else if(bash) injury = '<span class="tiny" style="color:var(--gold)">' + bash + ' bashing or stun</span>';
+    h += '<div class="crewcard ' + (ownsChar(c) ? "me" : "") + '" style="' + (ob.over ? "border-color:var(--red)" : "") + '" data-act="open" data-c="' + c.id + '">' +
+      '<h4>' + esc(c.name || "Unnamed") + '</h4>' +
+      '<div class="styl">' + esc(st.nick) + ' · ' + esc(st.power.toLowerCase()) + ' · p' + c.prof + '</div>' +
+      '<div class="row" style="gap:5px;margin-bottom:6px">' +
+      '<span class="chip">Def <b>' + combatTotal(c,"defense") + '</b></span>' +
+      '<span class="chip">Soak <b>' + sign(combatTotal(c,"soak")) + '</b></span>' +
+      '<span class="chip">Init <b>' + sign(combatTotal(c,"initiative")) + '</b></span></div>' +
+      status + (injury ? ' · ' + injury : "") +
+      (isGM() && !ownsChar(c) ? '<div class="tiny muted" style="margin-top:5px">' + (c.allowGmEdit ? "You may edit this sheet" : "View only") + '</div>' : "") +
+      '</div>';
+  });
+  h += '</div>';
+  if(!mine.length && list.length){
+    h += '<div class="row" style="margin-top:12px"><button class="btn primary" data-act="newchar">Create your Neverborn</button></div>';
+  }
+  return h;
+}
+
+/* ---------- overview ----------------------------------------------------- */
+function viewOverview(c){
+  const ed = canEditChar(c);
+  const st = STYLES[c.styleKey];
+  let h = '<div class="banner"><span>Overview</span></div>';
+  if(!ed) h += '<p class="tiny muted" style="margin-top:-6px">Read only. ' + (isGM() ? "The player hasn't given you edit access." : "This isn't your character.") + '</p>';
+
+  h += '<div class="card"><div class="grid g2">' +
+    fld("Name", 'text', "name", c.name, ed, c.id) +
+    '<div><label class="fl">Sibling style</label>' + sel("styleKey", STYLE_KEYS.map(k => [k, STYLES[k].n + " — " + STYLES[k].power]), c.styleKey, ed, c.id) + '</div>' +
+    '</div>';
+  h += '<div class="grid g4" style="margin-top:9px">' +
+    '<div><label class="fl">Proficiency</label>' + sel("prof", [[1,"1"],[2,"2"],[3,"3"]], c.prof, ed, c.id) + '</div>' +
+    fld("Height", 'text', "height", c.height, ed, c.id) +
+    fld("Weight", 'text', "weight", c.weight, ed, c.id) +
+    fld("Age", 'text', "age", c.age, ed, c.id) +
+    fld("Gender", 'text', "gender", c.gender, ed, c.id) +
+    fld("Hair", 'text', "hair", c.hair, ed, c.id) +
+    fld("Eyes", 'text', "eyes", c.eyes, ed, c.id) +
+    '</div></div>';
+
+  if(c.prof > S.campaign.prof){
+    h += '<div class="card" style="border-color:var(--gold);background:var(--gold-wash)"><b>Above the campaign level.</b> ' +
+      'This campaign runs at proficiency ' + S.campaign.prof + '. The GM will see this flagged.</div>';
+  }
+
+  h += '<div class="card tape" style="margin-top:14px"><h2 class="sec">' + esc(st.n) + ' — ' + esc(st.power) + '</h2>' +
+    '<p class="hand" style="margin:0 0 9px">' + esc(st.blurb) + '</p>' +
+    '<h3 class="sub">Power set</h3><ul style="margin:0 0 9px;padding-left:18px">' +
+    st.set.map(s => '<li>' + esc(s) + '</li>').join("") + '</ul>' +
+    '<h3 class="sub">Your proficiency</h3><p style="margin:0">' + esc(PROF_TEXT[c.prof]) + '</p></div>';
+
+  h += '<div class="card" style="margin-top:14px"><h2 class="sec">Backstory</h2>' +
+    '<textarea data-fk="bs' + c.id + '" data-bind="backstory" data-c="' + c.id + '" ' + (ed?"":"disabled") +
+    ' placeholder="Who were you before the Deadbeat showed up?">' + esc(c.backstory) + '</textarea>' +
+    '<label class="fl" style="margin-top:9px">Self portrait, in words</label>' +
+    '<textarea data-fk="pt' + c.id + '" data-bind="portrait" data-c="' + c.id + '" ' + (ed?"":"disabled") +
+    ' placeholder="What people see when they look at you." style="min-height:44px">' + esc(c.portrait) + '</textarea></div>';
+
+  if(ownsChar(c)){
+    h += '<div class="card" style="margin-top:14px"><h3 class="sub">Sharing</h3>' +
+      '<label class="swtch"><input type="checkbox" data-act="toggle-gmedit" data-c="' + c.id + '" ' + (c.allowGmEdit?"checked":"") + '> Let the GM edit this sheet</label>' +
+      '<p class="tiny muted" style="margin:6px 0 0">The GM can always read your sheet. Editing stays off until you turn it on.</p></div>';
+  }
+  return h;
+}
+
+/* small helpers for bound fields */
+function fld(label, type, key, val, ed, cid, extra){
+  return '<div><label class="fl">' + esc(label) + '</label>' +
+    '<input type="' + type + '" data-fk="' + key + cid + '" data-bind="' + key + '" data-c="' + cid + '" ' +
+    (ed ? "" : "disabled") + ' value="' + esc(val) + '" ' + (extra||"") + '></div>';
+}
+function sel(key, opts, val, ed, cid){
+  return '<select data-fk="' + key + cid + '" data-bind="' + key + '" data-c="' + cid + '" ' + (ed?"":"disabled") + '>' +
+    opts.map(o => '<option value="' + esc(o[0]) + '" ' + (String(o[0]) === String(val) ? "selected" : "") + '>' + esc(o[1]) + '</option>').join("") +
+    '</select>';
+}
+function stepper(act, key, val, ed, cid, min, max){
+  return '<span class="stepper">' +
+    '<button data-act="' + act + '" data-k="' + key + '" data-d="-1" data-c="' + cid + '" ' + (ed && val > (min==null?-99:min) ? "" : "disabled") + '>−</button>' +
+    '<span class="val">' + val + '</span>' +
+    '<button data-act="' + act + '" data-k="' + key + '" data-d="1" data-c="' + cid + '" ' + (ed && (max==null || val < max) ? "" : "disabled") + '>+</button></span>';
+}
+
+/* ---------- stats and saves ---------------------------------------------- */
+function viewStats(c){
+  const ed = canEditChar(c);
+  const avail = xpAvailable(c);
+  let h = '<div class="banner"><span>Stats and saves</span></div>';
+  h += '<p class="tiny muted" style="margin-top:-6px">Attributes cost 1 XP per point. Saves and combat stats cost 2 XP per point. ' +
+       'You have <b>' + avail + '</b> XP left.</p>';
+
+  h += '<div class="grid g2">';
+
+  /* attributes */
+  h += '<div class="card"><h2 class="sec">Attributes</h2>' +
+    '<table class="t"><thead><tr><th>Attribute</th><th class="num">Score</th><th class="num">Mod</th><th class="num">Temp</th></tr></thead><tbody>';
+  ATTRS.forEach(a => {
+    const sc = num(c.attrs[a.k],10);
+    h += '<tr><td style="font-family:var(--f-cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase">' + esc(a.n) + '</td>' +
+      '<td class="num">' + stepper("attr", a.k, sc, ed, c.id, 0, null) + '</td>' +
+      '<td class="num"><span class="total">' + sign(attrMod(sc)) + '</span></td>' +
+      '<td class="num"><input type="number" data-fk="at' + a.k + c.id + '" data-bind="attrTemp.' + a.k + '" data-c="' + c.id + '" ' +
+        (ed?"":"disabled") + ' value="' + num(c.attrTemp[a.k],0) + '" style="width:54px;text-align:center"></td></tr>';
+  });
+  h += '</tbody></table>' +
+    '<p class="tiny muted" style="margin:8px 0 0">Everything starts at 10. Dropping below 10 refunds XP and gives you a negative modifier. ' +
+    'Temp is for expression and gear effects — it never costs XP.</p></div>';
+
+  /* saves */
+  h += '<div class="card"><h2 class="sec">Saves</h2>' +
+    '<table class="t"><thead><tr><th>Save</th><th class="num">Base</th><th class="num">Attr</th><th class="num">Misc</th><th class="num">Total</th></tr></thead><tbody>';
+  SAVES.forEach(s => {
+    h += '<tr><td style="font-family:var(--f-cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase">' + esc(s.n) + '</td>' +
+      '<td class="num">' + stepper("save", s.k, num(c.saveBase[s.k],0), ed, c.id, 0, null) + '</td>' +
+      '<td class="num muted">' + sign(attrModOf(c, s.attr)) + ' <span class="tiny">' + s.attr + '</span></td>' +
+      '<td class="num"><input type="number" data-fk="sm' + s.k + c.id + '" data-bind="saveMisc.' + s.k + '" data-c="' + c.id + '" ' +
+        (ed?"":"disabled") + ' value="' + num(c.saveMisc[s.k],0) + '" style="width:54px;text-align:center"></td>' +
+      '<td class="num"><span class="total">' + sign(saveTotal(c, s.k)) + '</span></td></tr>';
+  });
+  h += '</tbody></table>';
+  if(dmgPenalty(c)) h += '<p class="tiny" style="margin:8px 0 0;color:var(--red)">Injury penalty of ' + dmgPenalty(c) + ' is already included.</p>';
+  h += '</div></div>';
+
+  /* combat */
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Combat</h2>' +
+    '<div class="tw"><table class="t"><thead><tr><th>Stat</th><th class="num">Base</th><th class="num">Bought</th><th class="num">Attribute</th><th class="num">Expression</th><th class="num">Total</th></tr></thead><tbody>';
+  COMBAT.forEach(k => {
+    const attrPart = k.attr ? (k.half ? Math.floor(attrModOf(c,k.attr)/2) : attrModOf(c,k.attr)) : null;
+    h += '<tr><td style="font-family:var(--f-cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase">' + esc(k.n) + '</td>' +
+      '<td class="num muted">' + (k.base || "—") + '</td>' +
+      '<td class="num">' + stepper("combat", k.k, num(c.combat[k.k],0), ed, c.id, 0, null) + '</td>' +
+      '<td class="num muted">' + (attrPart == null ? "—" : sign(attrPart) + ' <span class="tiny">' + (k.half ? "½ " : "") + k.attr + '</span>') + '</td>' +
+      '<td class="num"><input type="number" data-fk="ce' + k.k + c.id + '" data-bind="combatExpr.' + k.k + '" data-c="' + c.id + '" ' +
+        (ed?"":"disabled") + ' value="' + num(c.combatExpr[k.k],0) + '" style="width:54px;text-align:center"></td>' +
+      '<td class="num"><span class="total">' + (k.k === "defense" ? combatTotal(c,k.k) : sign(combatTotal(c,k.k))) + '</span></td></tr>';
+  });
+  h += '</tbody></table></div>' +
+    '<p class="tiny muted" style="margin:8px 0 0">Defense is the only stat with a base of 10. Melee and Ranged are flat totals — no attribute is added. ' +
+    'Initiative keeps its Dexterity modifier and Soak keeps half your Constitution bonus, as printed on the sheet.</p>' +
+    '<p class="tiny muted" style="margin:5px 0 0">To soak, beat 15 + the damage modifier. Every 5 you fail by is another level of damage.</p></div>';
+
+  return h;
+}
+/* ---------- skills -------------------------------------------------------- */
+function viewSkills(c){
+  const ed = canEditChar(c);
+  let ranks = 0;
+  Object.values(c.skills).forEach(e => ranks += Math.max(0, num(e.ranks,0)));
+  c.subSkills.forEach(e => ranks += Math.max(0, num(e.ranks,0)));
+  let h = '<div class="banner"><span>Skills</span></div>';
+  h += '<p class="tiny muted" style="margin-top:-6px">1 XP buys 2 ranks. You have <b>' + ranks + '</b> ranks costing <b>' +
+       Math.ceil(ranks/2) + '</b> XP, and <b>' + xpAvailable(c) + '</b> XP left. ' +
+       'A skill with at least 1 rank counts as trained, so a natural 20 on it succeeds to the highest level possible.</p>';
+
+  h += '<div class="card"><div class="tw"><table class="t"><thead><tr>' +
+    '<th>Skill</th><th class="num">Key</th><th class="num">Ranks</th><th class="num">Attr</th><th class="num">Misc</th><th class="num">Total</th><th></th></tr></thead><tbody>';
+
+  SKILLS.forEach(def => {
+    if(def.sub){
+      const rows = c.subSkills.filter(x => x.key === def.k);
+      rows.forEach(x => { h += skillRow(c, def, x, ed, true); });
+      h += '<tr><td colspan="7" style="padding:4px 5px">' +
+        (ed ? '<button class="btn ghost sm" data-act="addsub" data-k="' + def.k + '" data-c="' + c.id + '">Add a ' + esc(def.n.toLowerCase()) + ' ' + esc(def.sub) + '</button>' : '') +
+        ' <span class="tiny muted">' + esc(SKILL_DESC[def.k]) + '</span></td></tr>';
+    } else {
+      h += skillRow(c, def, c.skills[def.k] || {ranks:0,misc:0}, ed, false);
+    }
+  });
+  h += '</tbody></table></div></div>';
+  return h;
+}
+
+function skillRow(c, def, entry, ed, isSub){
+  const total = skillTotal(c, def.k, entry);
+  const key = isSub ? entry.id : def.k;
+  const label = isSub ? (entry.label || def.n) : def.n;
+  const attrLabel = def.attr.map(a => a.toUpperCase()).join("/");
+  const trained = num(entry.ranks,0) > 0;
+  return '<tr>' +
+    '<td>' + (isSub
+      ? '<input type="text" data-fk="sl' + entry.id + '" data-bind="sub.label" data-id="' + entry.id + '" data-c="' + c.id + '" ' +
+        (ed?"":"disabled") + ' value="' + esc(entry.label||"") + '" placeholder="' + esc(def.n + " — " + def.sub) + '" style="max-width:190px">'
+      : '<span title="' + esc(SKILL_DESC[def.k]) + '" style="' + (trained ? "font-weight:600" : "") + '">' + esc(label) + '</span>') + '</td>' +
+    '<td class="num tiny muted">' + attrLabel + '</td>' +
+    '<td class="num">' + (isSub
+      ? stepperSub(entry.id, num(entry.ranks,0), ed, c.id)
+      : stepper("rank", def.k, num(entry.ranks,0), ed, c.id, 0, null)) + '</td>' +
+    '<td class="num muted">' + sign(bestAttrMod(c, def.attr)) + '</td>' +
+    '<td class="num"><input type="number" data-fk="km' + key + c.id + '" data-bind="' + (isSub ? "sub.misc" : "skillmisc." + def.k) + '" ' +
+      'data-id="' + key + '" data-c="' + c.id + '" ' + (ed?"":"disabled") + ' value="' + num(entry.misc,0) + '" style="width:52px;text-align:center"></td>' +
+    '<td class="num"><span class="total">' + sign(total) + '</span></td>' +
+    '<td class="num">' + (isSub && ed ? '<button class="btn ghost sm" data-act="delsub" data-id="' + entry.id + '" data-c="' + c.id + '">×</button>' : '') + '</td>' +
+    '</tr>';
+}
+function stepperSub(id, val, ed, cid){
+  return '<span class="stepper">' +
+    '<button data-act="subrank" data-id="' + id + '" data-d="-1" data-c="' + cid + '" ' + (ed && val > 0 ? "" : "disabled") + '>−</button>' +
+    '<span class="val">' + val + '</span>' +
+    '<button data-act="subrank" data-id="' + id + '" data-d="1" data-c="' + cid + '" ' + (ed?"":"disabled") + '>+</button></span>';
+}
+
+/* ---------- expressions list --------------------------------------------- */
+function viewExpressions(c){
+  if(S.forge) return viewForge(c);
+  const ed = canEditChar(c);
+  const used = slotsUsed(c), total = slotsTotal(c);
+  const st = STYLES[c.styleKey];
+  let h = '<div class="banner"><span>Expressions</span></div>';
+  h += '<div class="row" style="margin-top:-4px;margin-bottom:12px">' +
+    '<span class="chip ' + (used > total ? "bad" : "hi") + '">Slots <b>' + used + ' / ' + total + '</b></span>' +
+    '<span class="chip">Proficiency 1 fills 1 slot, 2 fills 2, 3 fills all 3</span>' +
+    (ed ? '<span class="right"><button class="btn ghost sm" data-act="buyslot" data-c="' + c.id + '">Buy a slot — 10 XP</button></span>' : '') +
+    '</div>';
+
+  if(ed){
+    h += '<div class="card tape" style="margin-bottom:14px"><h3 class="sub">Build a new expression</h3>' +
+      '<p class="tiny muted" style="margin:0 0 9px">Start with what you want it to do for your character, then work out how ' +
+      esc(st.power.toLowerCase()) + ' gets you there.</p>' +
+      '<div class="row">' +
+      [1,2,3].map(p => '<button class="btn ' + (p===1?"primary":"") + '" data-act="forge-new" data-p="' + p + '" data-c="' + c.id + '"' +
+        (p > S.campaign.prof ? ' title="Above the campaign level — the GM will see it flagged"' : '') +
+        '>Proficiency ' + p + '</button>').join("") +
+      '</div></div>';
+  }
+
+  if(!c.expressions.length){
+    h += '<div class="empty"><p>No expressions yet. You have limitless potential and nothing to show for it.</p></div>';
+    return h;
+  }
+
+  c.expressions.forEach(e => {
+    const d = computeDebt(e);
+    const act = actionOf(e);
+    const r = RANGES.find(x => x.k === e.range) || RANGES[0];
+    h += '<div class="card" style="margin-bottom:10px">' +
+      '<div class="row">' +
+      '<b style="font-family:var(--f-display);font-size:17px;font-weight:400">' + esc(e.name || "Untitled expression") + '</b>' +
+      '<span class="pill p' + e.prof + '">P' + e.prof + '</span>' +
+      '<span class="pill ' + e.status + '">' + statusLabel(e.status) + '</span>' +
+      (e.isExpansion ? '<span class="pill draft">Expansion</span>' : '') +
+      '<span class="right row" style="gap:6px">' +
+      (ed ? '<button class="btn ghost sm" data-act="forge-edit" data-e="' + e.id + '" data-c="' + c.id + '">Edit</button>' : '') +
+      (ed && e.status !== "pending" ? '<button class="btn sm" data-act="submit-expr" data-e="' + e.id + '" data-c="' + c.id + '">Send to GM</button>' : '') +
+      (ed ? '<button class="btn ghost sm danger" data-act="del-expr" data-e="' + e.id + '" data-c="' + c.id + '">Delete</button>' : '') +
+      '</span></div>' +
+      '<div class="row tiny muted" style="gap:10px;margin:5px 0 7px">' +
+      '<span>' + esc(e.power) + '</span><span>' + ACTIONS[act] + ' action</span><span>' + esc(r.n) + '</span>' +
+      '<span><b style="color:var(--red);font-size:14px">' + nf(d.final) + '</b> debt</span>' +
+      (e.tradeoff ? '<span>Traded: ' + nf(d.monthly) + ' monthly, ' + nf(d.activation) + ' to activate</span>' : '') +
+      '</div>' +
+      (e.desc ? '<p class="hand" style="margin:0 0 7px">' + esc(e.desc) + '</p>' : '') +
+      condSummary(e) +
+      (e.gmNote ? '<p class="tiny" style="margin:7px 0 0;padding:6px 9px;background:var(--red-wash);border-radius:3px;color:var(--red-ink)"><b>GM:</b> ' + esc(e.gmNote) + '</p>' : '') +
+      '</div>';
+  });
+  return h;
+}
+
+function statusLabel(s){
+  return {draft:"Draft", pending:"Waiting on the GM", approved:"Approved", changes:"Changes requested"}[s] || s;
+}
+function condSummary(e){
+  const bits = [];
+  if(e.linkPort || e.linkDist) bits.push("Linked" + (e.linkObject ? " to " + e.linkObject : ""));
+  (e.conds||[]).forEach(c => bits.push(c.text || (COND_TIERS.find(t=>t.v===num(c.v,0))||{}).n));
+  if(num(e.condSave,0)) bits.push((COND_SAVE.find(x=>x.v===num(e.condSave,0))||{}).n);
+  (e.limits||[]).forEach(c => bits.push(c.text || (LIMIT_TIERS.find(t=>t.v===num(c.v,0))||{}).n));
+  if(e.aoeFeet) bits.push(e.aoeFeet + " ft area");
+  if(e.loops) bits.push("Loops ×" + e.loops);
+  if(!bits.length) return "";
+  return '<div class="row" style="gap:5px">' + bits.map(b => '<span class="chip">' + esc(b) + '</span>').join("") + '</div>';
+}
+
+/* ---------- the forge ----------------------------------------------------- */
+function viewForge(c){
+  const e = S.forge;
+  const d = computeDebt(e);
+  const power = e.power;
+  const scales = SCALES[power] || [];
+  const guided = e.prof === 1;
+  const st = STYLES[c.styleKey];
+
+  let h = '<div class="row" style="margin-bottom:10px">' +
+    '<div class="banner" style="margin:0"><span>Expression forge</span></div>' +
+    '<span class="right"><button class="btn ghost sm" data-act="forge-cancel">Cancel</button></span></div>';
+  h += '<p class="tiny muted" style="margin:-4px 0 12px">' + esc(power) + ' · proficiency ' + e.prof + ' · ' + esc(PROF_TEXT[e.prof]) + '</p>';
+
+  h += '<div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,258px);align-items:start">';
+
+  /* ---- left column ---- */
+  h += '<div>';
+
+  /* 1. concept */
+  h += '<div class="card"><h2 class="sec">1. Concept</h2>' +
+    '<label class="fl">Name it</label>' +
+    '<input type="text" data-fk="fname" data-forge="name" value="' + esc(e.name) + '" placeholder="Hush the Footfall">' +
+    '<label class="fl" style="margin-top:9px">What does it do?</label>' +
+    '<textarea data-fk="fdesc" data-forge="desc" placeholder="Start with how this helps you play your character, then link it to ' +
+      esc(power.toLowerCase()) + '.">' + esc(e.desc) + '</textarea>' +
+    '<div class="row" style="margin-top:9px">' +
+    '<label class="swtch"><input type="checkbox" data-forge="isExpansion" ' + (e.isExpansion?"checked":"") + '> This expands an expression I already have</label>' +
+    '</div>' +
+    (e.isExpansion ? '<div style="margin-top:8px"><label class="fl">Expanding which one?</label>' +
+      '<select data-forge="parentId">' + '<option value="">Pick one</option>' +
+      c.expressions.filter(x => x.id !== e.id && !x.isExpansion).map(x =>
+        '<option value="' + x.id + '" ' + (x.id === e.parentId ? "selected" : "") + '>' + esc(x.name || "Untitled") + ' (p' + x.prof + ')</option>').join("") +
+      '</select><p class="tiny muted" style="margin:5px 0 0">Half price, no new slot, and it has to use the same elements. ' +
+      'Expansions can rank down but never up.</p></div>' : "") +
+    '</div>';
+
+  /* 2. scale */
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">2. Link it to your ability</h2>';
+  if(!guided){
+    h += '<p class="tiny muted" style="margin:0 0 9px">Proficiency ' + e.prof + ' is deliberately freeform. ' +
+      (e.prof === 2
+        ? 'Pick your own measurement scale — it has to start at the lowest commonly used version of that unit — and set what one step costs. The book suggests +2 per step for metaphorical Mass.'
+        : 'Keep a small thematic tie-in and name your own price. This one needs the GM to sign off.') + '</p>' +
+      '<div class="grid g2">' +
+      '<div><label class="fl">Your scale, and what a step costs</label>' +
+      '<input type="text" data-fk="fcn" data-forge="customNote" value="' + esc(e.customNote) + '" placeholder="+2 debt per inch of shadow removed"></div>' +
+      '<div><label class="fl">Core cost before mods</label>' +
+      '<input type="number" data-fk="fcc" data-forge="customCore" value="' + (e.customCore == null ? "" : e.customCore) + '" placeholder="' + PROF_BASE[e.prof] + '"></div>' +
+      '</div><p class="tiny muted" style="margin:7px 0 0">Leave the cost blank to use the proficiency ' + e.prof + ' base of ' + PROF_BASE[e.prof] + ' debt.</p>';
+  } else if(power === "Endings"){
+    h += '<p class="tiny muted" style="margin:0 0 9px">Endings scales by how likely the ending already was. These tiers are self-contained — they replace the base debt.</p>';
+    ENDINGS_TIERS.forEach(t => {
+      h += '<label class="swtch" style="display:flex;align-items:flex-start;gap:9px;padding:6px 0;border-bottom:1px solid var(--rule)">' +
+        '<input type="radio" name="etier" data-forge="tier" value="' + t.v + '" ' + (num(e.tier,30) === t.v ? "checked" : "") + ' style="margin-top:3px">' +
+        '<span><b>' + t.v + ' debt — ' + esc(t.n) + '</b><br><span class="tiny muted">' + esc(t.ex) + '</span></span></label>';
+    });
+    h += '<label class="swtch" style="margin-top:10px"><input type="checkbox" data-forge="living" ' + (e.living?"checked":"") +
+      '> Used on a living or sentient creature <span class="tiny muted">(+20 debt, applied before reductions)</span></label>';
+  } else {
+    h += '<p class="tiny muted" style="margin:0 0 9px">Set only the scales you actually use. Everything else stays at zero.</p>';
+    scales.forEach(s => {
+      const v = num(e.scales[s.k],0);
+      let unit = s.unit;
+      if(e.tradeoff && s.tradeUnit) unit = s.tradeUnit;
+      const cost = s.banded ? bandedCost(v, s.banded) : Math.ceil(v * s.per);
+      h += '<div style="padding:8px 0;border-bottom:1px solid var(--rule)">' +
+        '<div class="row"><label class="fl" style="margin:0;flex:1">' + esc(s.n) + '</label>' +
+        '<span class="tiny muted">' + (cost ? "+" + nf(cost) + " debt" : "—") + '</span></div>' +
+        '<div class="row" style="margin-top:4px">' +
+        '<input type="number" data-fk="fs' + s.k + '" data-forge="scale.' + s.k + '" value="' + v + '" step="' + (s.step||1) + '" min="0" style="max-width:130px">' +
+        '<span class="tiny muted">' + esc(unit) + (e.tradeoff && s.tradeMult ? " × " + s.tradeMult : "") + '</span></div>' +
+        '<p class="tiny muted" style="margin:4px 0 0">' + esc(s.hint) + '</p></div>';
+    });
+    if(power === "Flow"){
+      h += '<div style="padding:8px 0"><label class="fl">Velocity multiplier</label>' +
+        '<div class="row"><input type="number" data-fk="fvel" data-forge="velocity" value="' + Math.max(1,num(e.velocity,1)) + '" min="1" step="1" style="max-width:100px">' +
+        '<span class="tiny muted">× — multiplies the seconds cost only, before any reductions</span></div></div>';
+    }
+    const pt = predictedTier(e, S.campaign.tiers);
+    if(pt){
+      h += '<div style="margin-top:10px;padding:9px 11px;background:var(--blue-wash);border-radius:3px">' +
+        '<b>Damage tier ' + pt.t + ' — ' + esc(pt.n) + '</b><br>' +
+        '<span class="tiny">' + esc(tierEffect(pt)) + '. House rule, editable by the GM in campaign settings.</span></div>';
+    }
+  }
+  h += '</div>';
+
+  /* 3. universal mods */
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">3. Universal mods</h2>' +
+    '<div class="grid g2">';
+  if(power !== "Law"){
+    h += '<div><label class="fl">Area of effect — +1 debt per foot</label>' +
+      '<input type="number" data-fk="faoe" data-forge="aoeFeet" value="' + num(e.aoeFeet,0) + '" min="0"></div>' +
+      '<div><label class="fl">Of that, mutable shape — doubles those feet</label>' +
+      '<input type="number" data-fk="faom" data-forge="aoeMutable" value="' + num(e.aoeMutable,0) + '" min="0" max="' + num(e.aoeFeet,0) + '"></div>';
+  } else {
+    h += '<div style="grid-column:1/-1"><p class="tiny muted" style="margin:0">Law can\'t take the area of effect mod — its own distance scale covers that.</p></div>';
+  }
+  h += '<div><label class="fl">Offset origin — +1 debt per foot</label>' +
+    '<input type="number" data-fk="foff" data-forge="offsetFeet" value="' + num(e.offsetFeet,0) + '" min="0"></div>' +
+    '<div><label class="fl">Looping — +10 debt each, max 10</label>' +
+    '<input type="number" data-fk="flp" data-forge="loops" value="' + num(e.loops,0) + '" min="0" max="10"></div>';
+  if(["Lumen","Mass","Flow","Exchange"].includes(power)){
+    h += '<div><label class="fl">Escalate — doubles the running total per step</label>' +
+      '<input type="number" data-fk="fesc" data-forge="escalate" value="' + num(e.escalate,0) + '" min="0" max="8"></div>' +
+      '<div style="align-self:end"><p class="tiny muted" style="margin:0">Each step moves you up a unit — inches to feet, one degree to ten.</p></div>';
+  }
+  h += '</div></div>';
+
+  /* 4. conditions and limitations */
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">4. Conditions and limitations</h2>' +
+    '<p class="tiny muted" style="margin:0 0 11px">These bring the cost down. They can\'t cancel each other out — they have to work together. ' +
+    'Your action type comes out of whatever you pick here.</p>';
+
+  h += '<h3 class="sub">Range</h3><select data-forge="range">' +
+    RANGES.map(r => '<option value="' + r.k + '" ' + (e.range === r.k ? "selected" : "") + '>' +
+      esc(r.n) + (r.v ? " (" + r.v + ")" : " (default, no reduction)") + ' — ' + esc(r.d) + '</option>').join("") + '</select>';
+
+  h += '<h3 class="sub" style="margin-top:13px">Linked object</h3><div class="grid g2">' +
+    '<div><label class="fl">How portable?</label><select data-forge="linkPort">' +
+      LINK_PORT.map(o => '<option value="' + o.v + '" ' + (num(e.linkPort,0)===o.v?"selected":"") + '>' + esc(o.n) + (o.v?" ("+o.v+")":"") + '</option>').join("") + '</select></div>' +
+    '<div><label class="fl">How distinctive?</label><select data-forge="linkDist">' +
+      LINK_DIST.map(o => '<option value="' + o.v + '" ' + (num(e.linkDist,0)===o.v?"selected":"") + '>' + esc(o.n) + (o.v?" ("+o.v+")":"") + '</option>').join("") + '</select></div>' +
+    '</div>' +
+    ((e.linkPort || e.linkDist) ? '<div style="margin-top:8px"><label class="fl">The object</label>' +
+      '<input type="text" data-fk="flo" data-forge="linkObject" value="' + esc(e.linkObject) + '" placeholder="A pair of worn-out sneakers"></div>' : "");
+
+  h += '<h3 class="sub" style="margin-top:13px">Conditions</h3>';
+  (e.conds||[]).forEach((cd, i) => {
+    h += '<div class="row" style="margin-bottom:6px">' +
+      '<select data-forge="cond.v.' + i + '" style="max-width:220px">' +
+        COND_TIERS.map(t => '<option value="' + t.v + '" ' + (num(cd.v,0)===t.v?"selected":"") + '>' + esc(t.n) + ' (' + t.v + ') — ' + esc(t.d) + '</option>').join("") + '</select>' +
+      '<input type="text" data-fk="fcd' + i + '" data-forge="cond.text.' + i + '" value="' + esc(cd.text||"") + '" placeholder="Knowing the target\'s full name" style="flex:1">' +
+      '<button class="btn ghost sm" data-act="forge-delcond" data-i="' + i + '">×</button></div>';
+  });
+  h += '<button class="btn ghost sm" data-act="forge-addcond">Add a condition</button>';
+  h += '<div style="margin-top:9px"><label class="fl">Or tie it to a saving throw</label><select data-forge="condSave">' +
+    COND_SAVE.map(o => '<option value="' + o.v + '" ' + (num(e.condSave,0)===o.v?"selected":"") + '>' + esc(o.n) + (o.v?" ("+o.v+")":"") + '</option>').join("") + '</select></div>';
+
+  h += '<h3 class="sub" style="margin-top:13px">Limitations</h3>';
+  (e.limits||[]).forEach((cd, i) => {
+    h += '<div class="row" style="margin-bottom:6px">' +
+      '<select data-forge="limit.v.' + i + '" style="max-width:220px">' +
+        LIMIT_TIERS.map(t => '<option value="' + t.v + '" ' + (num(cd.v,0)===t.v?"selected":"") + '>' + esc(t.n) + ' (' + t.v + ') — ' + esc(t.d) + '</option>').join("") + '</select>' +
+      '<input type="text" data-fk="fli' + i + '" data-forge="limit.text.' + i + '" value="' + esc(cd.text||"") + '" placeholder="Only after sundown" style="flex:1">' +
+      '<button class="btn ghost sm" data-act="forge-dellimit" data-i="' + i + '">×</button></div>';
+  });
+  h += '<button class="btn ghost sm" data-act="forge-addlimit">Add a limitation</button>';
+  h += '</div>';
+
+  /* 5. debt trade off */
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">5. Debt trade off</h2>' +
+    '<label class="swtch"><input type="checkbox" data-forge="tradeoff" ' + (e.tradeoff?"checked":"") +
+    '> Turn this cost into permanent monthly rent</label>' +
+    '<p class="tiny muted" style="margin:7px 0 0">You pay it every month whether you use the expression or not, but the scaling gets much better and ' +
+    'activation only costs 20% of the monthly figure, rounded up. ' +
+    (e.prof === 3 ? "At proficiency 3 this needs to be discussed with your GM." : "") + '</p>' +
+    (e.tradeoff && e.prof <= 2 ? '<p class="tiny" style="margin:7px 0 0"><b>Better scaling at proficiency ' + e.prof + ':</b> ' + esc(tradeText(power, e.prof)) + '</p>' : "") +
+    '</div>';
+
+  /* reference */
+  if(guided && REF[power]){
+    h += refBlock(power);
+    if(power === "Mass"){ h += refBlock("MassGal"); h += refBlock("MassDensity"); }
+    if(power === "Lumen"){ h += refBlock("LumenVolt"); h += refBlock("LumenTesla"); }
+    if(power === "Exchange"){ h += refBlock("ExchangeNewton"); h += refBlock("ExchangeCelsius"); }
+  }
+
+  h += '</div>';
+
+  /* ---- right column: the ledger ---- */
+  h += '<div style="position:sticky;top:96px">';
+  h += '<div class="card"><h3 class="sub">Debt</h3>' +
+    '<p class="bigdebt" style="margin:0 0 3px">' + nf(d.final) + '</p>' +
+    '<p class="tiny muted" style="margin:0 0 10px">' + ACTIONS[actionOf(e)] + ' action · ' +
+      esc((RANGES.find(x=>x.k===e.range)||RANGES[0]).n.toLowerCase()) + '</p>';
+  if(e.tradeoff){
+    h += '<div style="padding:8px 10px;background:var(--gold-wash);border-radius:3px;margin-bottom:10px">' +
+      '<b>' + nf(d.monthly) + '</b> monthly rent<br><b>' + nf(d.activation) + '</b> to activate</div>';
+  }
+  h += '<div class="ledger">' +
+    d.lines.map(l => '<div class="li"><span>' + esc(l[0]) + '</span><span>' + (l[1] >= 0 ? "+" : "") + nf(l[1]) + '</span></div>').join("") +
+    '<div class="li sum"><span>Final debt</span><span>' + nf(d.final) + '</span></div></div>';
+  if(d.floored) h += '<p class="tiny" style="margin:8px 0 0;color:var(--red)">Reductions took this below 1. No power is free — the floor is 1 debt.</p>';
+  h += '</div>';
+
+  h += '<div class="card" style="margin-top:10px"><h3 class="sub">Slots</h3>' +
+    '<p class="tiny" style="margin:0">' + (e.isExpansion
+      ? "An expansion takes no slot."
+      : "This takes <b>" + e.prof + "</b> of your " + slotsTotal(c) + " slots. " +
+        (slotsUsed(c) - (c.expressions.find(x=>x.id===e.id) ? num(c.expressions.find(x=>x.id===e.id).prof,0) : 0) + e.prof > slotsTotal(c)
+          ? '<span style="color:var(--red)">That puts you over. Buy a slot for 10 XP or drop something.</span>' : "")) + '</p></div>';
+
+  h += '<div class="card" style="margin-top:10px">' +
+    '<button class="btn primary" style="width:100%" data-act="forge-save">Save to my sheet</button>' +
+    '<button class="btn" style="width:100%;margin-top:7px" data-act="forge-submit">Save and send to the GM</button>' +
+    '</div>';
+  h += '</div></div>';
+  return h;
+}
+
+function tradeText(power, prof){
+  const t1 = {Endings:"the likelihood tier is halved", Flow:"seconds become minutes", Mass:"the base scale multiplies by 10",
+    Law:"duration scales in minutes and distance in 5 foot steps", Lumen:"the base scale multiplies by 10", Exchange:"the base scale multiplies by 10"};
+  const t2 = {Endings:"the likelihood tier is divided by 3", Flow:"all debt incurred is halved", Mass:"the base scale multiplies by 10",
+    Law:"duration scales in 10 minute steps and distance in 5 foot steps", Lumen:"the base scale multiplies by 10", Exchange:"the base scale multiplies by 10"};
+  return (prof === 1 ? t1 : t2)[power] || "";
+}
+
+function refBlock(key){
+  const r = REF[key]; if(!r) return "";
+  return '<details class="card" style="margin-top:12px"><summary style="cursor:pointer;font-family:var(--f-cond);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--ink-2)">' +
+    esc(r.title) + '</summary><div class="tw" style="margin-top:9px"><table class="t"><thead><tr>' +
+    r.cols.map(c => '<th>' + esc(c) + '</th>').join("") + '</tr></thead><tbody>' +
+    r.rows.map(row => '<tr>' + row.map(cell => '<td>' + esc(cell) + '</td>').join("") + '</tr>').join("") +
+    '</tbody></table></div></details>';
+}
+/* ---------- equipment ----------------------------------------------------- */
+function allGear(){ return GEAR.concat((S.campaign && S.campaign.gear) || []); }
+
+function viewGear(c){
+  const ed = canEditChar(c);
+  const res = num(c.bg.resources,0);
+  const cats = ["Melee","Ranged","Explosive","Armor","Comms","Kit"];
+  let h = '<div class="banner"><span>Equipment</span></div>';
+  h += '<p class="tiny muted" style="margin-top:-6px">Gear costs no XP. What you can simply have is gated on your Resources background, ' +
+    'currently level <b>' + res + '</b>. Everyday items are free to anyone. Anything above your level you have to acquire in play — the GM decides how.</p>';
+
+  h += '<div class="card"><h3 class="sub">Carried</h3>';
+  if(!c.gear.length) h += '<p class="tiny muted" style="margin:0">Nothing equipped.</p>';
+  else {
+    h += '<div class="tw"><table class="t"><thead><tr><th>Item</th><th>Effect</th><th>Note</th><th></th></tr></thead><tbody>';
+    c.gear.forEach((g, i) => {
+      const def = allGear().find(x => x.id === g.id);
+      if(!def) return;
+      h += '<tr><td><b>' + esc(def.n) + '</b><div class="tiny muted">' + esc(def.cat) + '</div></td>' +
+        '<td>' + (def.dmg !== "—" ? '<b>' + esc(def.dmg) + '</b>. ' : "") + esc(def.note) + '</td>' +
+        '<td><input type="text" data-fk="gn' + i + c.id + '" data-bind="gear.note." data-i="' + i + '" data-c="' + c.id + '" ' +
+          (ed?"":"disabled") + ' value="' + esc(g.note||"") + '" placeholder="Nickname, ammo, condition"></td>' +
+        '<td>' + (ed ? '<button class="btn ghost sm" data-act="delgear" data-i="' + i + '" data-c="' + c.id + '">×</button>' : '') + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  h += '</div>';
+
+  cats.forEach(cat => {
+    const items = allGear().filter(g => g.cat === cat);
+    if(!items.length) return;
+    h += '<div class="card" style="margin-top:12px"><h2 class="sec">' + esc(cat) + '</h2><div class="tw"><table class="t">' +
+      '<thead><tr><th>Item</th><th>Examples</th><th>Damage</th><th>Notes</th><th class="num">Res</th><th></th></tr></thead><tbody>';
+    items.forEach(g => {
+      const locked = num(g.res,1) > res;
+      h += '<tr style="' + (locked ? "opacity:.55" : "") + '"><td><b>' + esc(g.n) + '</b>' +
+        (g.canon ? "" : ' <span class="tiny muted">house</span>') + '</td>' +
+        '<td class="tiny muted">' + esc(g.ex) + '</td>' +
+        '<td>' + esc(g.dmg) + '</td>' +
+        '<td class="tiny">' + esc(g.note) + '</td>' +
+        '<td class="num">' + num(g.res,1) + '</td>' +
+        '<td>' + (ed ? '<button class="btn ghost sm" data-act="addgear" data-g="' + g.id + '" data-c="' + c.id + '">' +
+          (locked ? "Acquire" : "Take") + '</button>' : '') + '</td></tr>';
+    });
+    h += '</tbody></table></div></div>';
+  });
+
+  if(isGM()){
+    h += '<div class="card" style="margin-top:12px"><h2 class="sec">Add a custom item</h2>' +
+      '<p class="tiny muted" style="margin:0 0 9px">Follow the same paradigm: a damage type and modifier, or a flat number of levels.</p>' +
+      '<div class="grid g2">' +
+      '<div><label class="fl">Name</label><input type="text" id="cgn" data-fk="cgn"></div>' +
+      '<div><label class="fl">Category</label><select id="cgc">' + cats.map(x => '<option>' + x + '</option>').join("") + '</select></div>' +
+      '<div><label class="fl">Examples</label><input type="text" id="cge" data-fk="cge"></div>' +
+      '<div><label class="fl">Damage</label><input type="text" id="cgd" data-fk="cgd" placeholder="Bashing +3, or Lethal, 1 level"></div>' +
+      '<div style="grid-column:1/-1"><label class="fl">Notes</label><input type="text" id="cgnote" data-fk="cgnote"></div>' +
+      '<div><label class="fl">Resources level</label><select id="cgr"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>' +
+      '</div><div class="row" style="margin-top:10px"><button class="btn primary" data-act="addcustomgear">Add to the campaign</button></div></div>';
+  }
+  return h;
+}
+
+/* ---------- backgrounds --------------------------------------------------- */
+function viewBackground(c){
+  const ed = canEditChar(c);
+  let h = '<div class="banner"><span>Backgrounds</span></div>';
+  h += '<p class="tiny muted" style="margin-top:-6px">2 XP per level. These are bought at character creation or after a significant time skip — ' +
+    'the GM can also hand them out for things that happen in play.</p>';
+
+  h += '<div class="grid g2">';
+  h += '<div class="card"><h2 class="sec">Resources</h2>' +
+    '<div class="row" style="margin-bottom:8px">' + stepper("bg", "resources", num(c.bg.resources,0), ed, c.id, 0, 5) +
+    '<span class="tiny muted">' + (num(c.bg.resources,0)*2) + ' XP</span></div>' +
+    '<p style="margin:0">' + esc(BG_RESOURCES[num(c.bg.resources,0)]) + '</p>' +
+    '<p class="tiny muted" style="margin:7px 0 0">Non-supernatural assets only, unless the GM says otherwise.</p></div>';
+
+  h += '<div class="card"><h2 class="sec">Reputation</h2>' +
+    '<div class="row" style="margin-bottom:8px">' + stepper("bg", "reputation", num(c.bg.reputation,0), ed, c.id, 0, 5) +
+    '<span class="tiny muted">' + (num(c.bg.reputation,0)*2) + ' XP</span></div>' +
+    '<p style="margin:0">' + esc(BG_REPUTATION[num(c.bg.reputation,0)]) + '</p>' +
+    '<p class="tiny muted" style="margin:7px 0 0">Applied automatically to Charm and Intimidate. It cuts both ways — ' +
+    'a client who needs discretion may not want you.</p></div>';
+  h += '</div>';
+
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Contacts</h2>' +
+    '<p class="tiny muted" style="margin:0 0 9px">Each contact is one level, 2 XP. They are independent people living their own lives, not minions. ' +
+    'Once a contact is established their level can\'t change. The GM approves them.</p>';
+  c.contacts.forEach((ct, i) => {
+    h += '<div class="row" style="margin-bottom:6px">' +
+      '<input type="text" data-fk="ctn' + i + c.id + '" data-bind="contact.name." data-i="' + i + '" data-c="' + c.id + '" ' + (ed?"":"disabled") +
+        ' value="' + esc(ct.name||"") + '" placeholder="Name" style="max-width:190px">' +
+      '<input type="text" data-fk="ctd' + i + c.id + '" data-bind="contact.note." data-i="' + i + '" data-c="' + c.id + '" ' + (ed?"":"disabled") +
+        ' value="' + esc(ct.note||"") + '" placeholder="Who they are and what they owe you" style="flex:1">' +
+      (ed ? '<button class="btn ghost sm" data-act="delcontact" data-i="' + i + '" data-c="' + c.id + '">×</button>' : '') + '</div>';
+  });
+  if(ed) h += '<button class="btn ghost sm" data-act="addcontact" data-c="' + c.id + '">Add a contact</button>';
+  h += '</div>';
+  return h;
+}
+
+/* ---------- XP ledger ------------------------------------------------------ */
+function viewXp(c){
+  const ed = canEditChar(c);
+  const sp = xpSpent(c);
+  const avail = xpAvailable(c);
+  let h = '<div class="banner"><span>XP ledger</span></div>';
+  h += '<div class="grid g3" style="margin-bottom:12px">' +
+    '<div class="card"><h3 class="sub">Earned</h3><p class="bigdebt" style="color:var(--ink)">' + num(c.xpEarned,START_XP) + '</p></div>' +
+    '<div class="card"><h3 class="sub">Spent</h3><p class="bigdebt" style="color:var(--ink)">' + sp.total + '</p></div>' +
+    '<div class="card" style="' + (avail < 0 ? "border-color:var(--red)" : "") + '"><h3 class="sub">Available</h3>' +
+    '<p class="bigdebt" style="color:' + (avail < 0 ? "var(--red)" : "var(--green)") + '">' + avail + '</p></div></div>';
+
+  if(avail < 0) h += '<div class="card" style="border-color:var(--red);background:var(--red-wash);margin-bottom:12px">' +
+    '<b>You are ' + Math.abs(avail) + ' XP over.</b> Nothing is blocked — the GM will see it flagged on their side.</div>';
+
+  h += '<div class="card"><h2 class="sec">Where it went</h2><div class="ledger">' +
+    sp.parts.map(p => '<div class="li"><span>' + esc(p[0]) + '</span><span>' + p[1] + '</span></div>').join("") +
+    '<div class="li sum"><span>Total spent</span><span>' + sp.total + '</span></div></div>' +
+    '<p class="tiny muted" style="margin:10px 0 0">Attributes 1 XP per point. Saves and combat stats 2 XP per point. ' +
+    '1 XP buys 2 skill ranks. Backgrounds 2 XP per level. An extra expression slot is 10 XP.</p></div>';
+
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Awards</h2>';
+  if(ed || isGM()){
+    h += '<div class="row" style="margin-bottom:10px">' +
+      '<input type="number" id="xpamt" data-fk="xpamt" value="1" style="max-width:80px">' +
+      '<input type="text" id="xpnote" data-fk="xpnote" placeholder="Play of the game" style="flex:1">' +
+      '<button class="btn primary sm" data-act="awardxp" data-c="' + c.id + '">Award</button></div>';
+  }
+  h += '<div class="ledger">' + (c.xpLog||[]).slice().reverse().map(l =>
+    '<div class="li"><span>' + esc(l.note || "Award") + ' <span class="tiny muted">' + new Date(l.at).toLocaleDateString() + '</span></span>' +
+    '<span>' + sign(num(l.delta,0)) + '</span></div>').join("") + '</div>';
+  h += '<p class="tiny muted" style="margin:10px 0 0">The book recommends at least 1 XP at the end of a session, plus nominations the table agrees on: ' +
+    'play of the game, best role play, best scene maker.</p></div>';
+  return h;
+}
+
+/* ---------- session tracker ------------------------------------------------ */
+function viewPlay(c){
+  const ed = canEditChar(c);
+  const pen = dmgPenalty(c);
+  const owed = debtThisMonth(c), earned = num(c.goodwill,0);
+  const standing = monthlyRent(c);
+  let h = '<div class="banner"><span>Session tracker</span></div>';
+
+  /* actions available */
+  h += '<div class="card"><h2 class="sec">Your turn</h2><div class="row">' +
+    '<span class="chip hi">1 standard</span><span class="chip hi">1 move</span>' +
+    '<span class="chip hi">' + freeActions(c) + ' free</span>' +
+    '<span class="tiny muted">Free actions equal the higher of your Intelligence or Dexterity modifier, minimum 1.</span></div>' +
+    '<p class="tiny muted" style="margin:8px 0 0">Expressions default to a free action. Conditions you took can push one to standard, full round or triggered.</p></div>';
+
+  /* damage */
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Damage</h2>';
+  [["bashing","Bashing",6],["stun","Stun",6],["lethal","Lethal",3]].forEach(([k, label, max]) => {
+    const v = num(c.dmg[k],0);
+    h += '<div style="padding:8px 0;border-bottom:1px solid var(--rule)">' +
+      '<div class="row"><span style="font-family:var(--f-cond);font-weight:700;letter-spacing:.06em;text-transform:uppercase;min-width:74px">' + label + '</span>' +
+      '<span class="track">' + Array.from({length:max}, (_,i) =>
+        '<button class="box ' + (k === "lethal" ? "lethal " : "") + (i < v ? "on" : "") + '" data-act="dmg" data-k="' + k + '" data-n="' + (i+1) + '" data-c="' + c.id + '" ' +
+        (ed?"":"disabled") + ' aria-label="' + label + ' level ' + (i+1) + '"></button>').join("") + '</span>' +
+      (v ? '<button class="btn ghost sm" data-act="dmg" data-k="' + k + '" data-n="0" data-c="' + c.id + '">Clear</button>' : '') + '</div>' +
+      (v ? '<p class="tiny" style="margin:5px 0 0;color:' + (k === "lethal" ? "var(--red)" : "var(--ink-2)") + '">' +
+        esc(k === "lethal" ? DMG_LETHAL[Math.min(v,3)-1] : DMG_BASH[Math.min(v,6)-1]) + '</p>' : '') +
+      '<p class="tiny muted" style="margin:4px 0 0">' + esc(HEAL_NOTES[k]) + '</p></div>';
+  });
+  h += '<p class="tiny" style="margin:9px 0 0">' + (pen ? 'Currently <b>' + pen + '</b> to every combat and saving roll, already applied everywhere in the app.' : 'No penalties right now.') + '</p>' +
+    '<p class="tiny muted" style="margin:5px 0 0">Lethal damage can\'t be soaked unless you\'re using an expression or wearing armor, and it incapacitates immediately.</p></div>';
+
+  /* rent */
+  const ob = overBudget(c);
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Rent</h2><div class="grid g3">' +
+    '<div><h3 class="sub">Owed this month</h3><p class="bigdebt" style="color:' + (ob.over ? "var(--red)" : "var(--ink)") + '">' + nf(owed) + '</p></div>' +
+    '<div><h3 class="sub">Goodwill earned</h3><div class="row">' + stepper("goodwill", "goodwill", earned, ed, c.id, 0, null) + '</div>' +
+      '<div class="row" style="margin-top:6px"><input type="number" id="gwamt" data-fk="gwamt" placeholder="Amount" style="max-width:90px">' +
+      '<button class="btn sm" data-act="addgoodwill" data-c="' + c.id + '">Add a gig</button></div></div>' +
+    '<div><h3 class="sub">Standing rent</h3><div class="row">' +
+      '<input type="number" data-fk="srent" data-bind="standingRent" data-c="' + c.id + '" ' + (ed?"":"disabled") +
+      ' value="' + num(c.standingRent,0) + '" style="max-width:90px"></div>' +
+      '<p class="tiny muted" style="margin:5px 0 0">' + nf(standing) + ' total, including traded expressions.</p></div>' +
+    '</div>' +
+    '<div class="meter" style="margin-top:10px"><i class="' + (earned >= owed ? "ok" : "") + '" style="width:' +
+      (owed > 0 ? clamp(Math.round(earned/owed*100),0,100) : 100) + '%"></i></div>' +
+    '<p class="tiny" style="margin:6px 0 0">' + (earned >= owed
+      ? '<span style="color:var(--green)">Rent is covered.</span>'
+      : '<span style="color:var(--red)">' + nf(owed - earned) + ' short.</span> Goodwill comes from gigs you were specifically asked to do. Badwill counts.') + '</p></div>';
+
+  /* campaign budget — separate from the rent/goodwill comparison above:
+     this checks the same "owed" total against a single number the GM sets
+     for the whole table, rather than what you've personally earned. */
+  h += '<div class="card" style="margin-top:12px;' + (ob.over ? "border-color:var(--red)" : "") + '"><h2 class="sec">Campaign budget</h2>';
+  if(!ob.set){
+    h += '<p class="tiny muted" style="margin:0">Your GM hasn\'t set a campaign-wide goodwill budget yet. ' +
+      'Once they do, from Campaign Settings, your debt this month will be checked against it here and turn red if you go over.</p>';
+  } else {
+    h += '<div class="grid g3">' +
+      '<div><h3 class="sub">Budget</h3><p class="bigdebt" style="color:var(--ink)">' + nf(ob.budget) + '</p>' +
+      '<p class="tiny muted" style="margin:2px 0 0">Set by your GM · everyone in the campaign is compared against this same number.</p></div>' +
+      '<div><h3 class="sub">Your debt this month</h3><p class="bigdebt" style="color:' + (ob.over ? "var(--red)" : "var(--ink)") + '">' + nf(ob.owed) + '</p></div>' +
+      '<div><h3 class="sub">' + (ob.over ? "Over by" : "Room left") + '</h3><p class="bigdebt" style="color:' + (ob.over ? "var(--red)" : "var(--green)") + '">' +
+        (ob.over ? nf(ob.diff) : nf(ob.budget - ob.owed)) + '</p></div>' +
+      '</div>' +
+      '<div class="meter" style="margin-top:10px"><i class="' + (ob.over ? "" : "ok") + '" style="width:' + clamp(Math.round(ob.owed/ob.budget*100),0,100) + '%"></i></div>' +
+      '<p class="tiny" style="margin:6px 0 0">' + (ob.over
+        ? '<span style="color:var(--red)">You\'re over the campaign budget.</span> Your GM can see this on their dashboard too.'
+        : '<span style="color:var(--green)">Within budget.</span>') + '</p>';
+  }
+  h += '</div>';
+
+  /* debt log */
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Debt spent</h2>';
+  if(ed && c.expressions.length){
+    h += '<div class="row" style="margin-bottom:10px"><select id="usexpr" style="flex:1">' +
+      c.expressions.map(e => '<option value="' + e.id + '">' + esc(e.name || "Untitled") + ' — ' +
+        (e.tradeoff ? computeDebt(e).activation + " to activate" : computeDebt(e).final + " debt") + '</option>').join("") +
+      '</select><button class="btn primary sm" data-act="useexpr" data-c="' + c.id + '">Use it</button></div>';
+  }
+  if(!(c.debtLog||[]).length) h += '<p class="tiny muted" style="margin:0">Nothing spent this month.</p>';
+  else {
+    h += '<div class="ledger">' + c.debtLog.slice().reverse().map((l, ri) =>
+      '<div class="li"><span>' + esc(l.note) + ' <span class="tiny muted">' + new Date(l.at).toLocaleString() + '</span></span>' +
+      '<span>' + nf(num(l.amount,0)) + '</span></div>').join("") + '</div>';
+    if(ed) h += '<div class="row" style="margin-top:10px"><button class="btn ghost sm" data-act="newmonth" data-c="' + c.id + '">Start a new month</button>' +
+      '<span class="tiny muted">Clears the log and the goodwill, keeps standing rent.</span></div>';
+  }
+  h += '<p class="tiny muted" style="margin:9px 0 0">If a single fight costs you more than 25% of the gig\'s goodwill, the GM may enforce the spending limit: ' +
+    'contested d20 rolls, and on a loss you make a DC 10 luck roll every time you reach for an expression.</p></div>';
+
+  return h;
+}
+
+/* ---------- GM approvals --------------------------------------------------- */
+function pendingApprovals(){
+  const out = [];
+  S.chars.forEach(c => (c.expressions||[]).forEach(e => { if(e.status === "pending") out.push({c, e}); }));
+  return out;
+}
+function viewApprovals(){
+  if(!isGM()) return '<div class="empty"><p>Only the GM sees this.</p></div>';
+  const pend = pendingApprovals();
+  let h = '<div class="banner"><span>Approvals</span></div>';
+  if(!pend.length) h += '<div class="empty"><p>Nothing waiting. The crew is either well behaved or up to something.</p></div>';
+  pend.forEach(p => {
+    const d = computeDebt(p.e);
+    const overProf = p.e.prof > S.campaign.prof;
+    const overXp = xpAvailable(p.c) < 0;
+    const overSlot = slotsUsed(p.c) > slotsTotal(p.c);
+    h += '<div class="card" style="margin-bottom:12px">' +
+      '<div class="row"><b style="font-family:var(--f-display);font-size:17px;font-weight:400">' + esc(p.e.name || "Untitled") + '</b>' +
+      '<span class="pill p' + p.e.prof + '">P' + p.e.prof + '</span>' +
+      '<span class="tiny muted">' + esc(p.c.name || "Unnamed") + ' · ' + esc(p.e.power) + '</span>' +
+      '<span class="right"><b style="color:var(--red);font-size:18px">' + nf(d.final) + '</b> <span class="tiny muted">debt</span></span></div>';
+    if(overProf || overXp || overSlot){
+      h += '<div style="margin:8px 0;padding:7px 10px;background:var(--gold-wash);border-radius:3px" class="tiny">' +
+        (overProf ? '<div>Proficiency ' + p.e.prof + ' in a proficiency ' + S.campaign.prof + ' campaign.</div>' : '') +
+        (overXp ? '<div>This character is ' + Math.abs(xpAvailable(p.c)) + ' XP over budget.</div>' : '') +
+        (overSlot ? '<div>Using ' + slotsUsed(p.c) + ' of ' + slotsTotal(p.c) + ' slots.</div>' : '') + '</div>';
+    }
+    h += '<p class="hand" style="margin:6px 0">' + esc(p.e.desc || "No description given.") + '</p>' +
+      '<div class="row tiny muted" style="gap:10px;margin-bottom:7px">' +
+      '<span>' + ACTIONS[actionOf(p.e)] + ' action</span>' +
+      '<span>' + esc((RANGES.find(x=>x.k===p.e.range)||RANGES[0]).n) + '</span>' +
+      (p.e.tradeoff ? '<span>Traded — ' + nf(d.monthly) + ' monthly, ' + nf(d.activation) + ' activation</span>' : '') +
+      '</div>' + condSummary(p.e) +
+      '<details style="margin-top:9px"><summary class="tiny" style="cursor:pointer;color:var(--ink-2)">Show the maths</summary>' +
+      '<div class="ledger" style="margin-top:7px">' + d.lines.map(l =>
+        '<div class="li"><span>' + esc(l[0]) + '</span><span>' + (l[1]>=0?"+":"") + nf(l[1]) + '</span></div>').join("") +
+      '<div class="li sum"><span>Final</span><span>' + nf(d.final) + '</span></div></div></details>' +
+      '<div class="row" style="margin-top:11px">' +
+      '<input type="text" id="gmn_' + p.e.id + '" data-fk="gmn_' + p.e.id + '" placeholder="Note back to the player" style="flex:1" value="' + esc(p.e.gmNote||"") + '">' +
+      '<button class="btn primary sm" data-act="approve" data-c="' + p.c.id + '" data-e="' + p.e.id + '">Approve</button>' +
+      '<button class="btn sm danger" data-act="reject" data-c="' + p.c.id + '" data-e="' + p.e.id + '">Request changes</button>' +
+      '</div></div>';
+  });
+  return h;
+}
+
+/* ---------- campaign settings ---------------------------------------------- */
+function viewCampaign(){
+  if(!isGM()){
+    return '<div class="banner"><span>Campaign settings</span></div>' +
+      '<div class="empty"><p>The GM here is <b>' + esc((S.campaign && S.campaign.gmName) || "unknown") +
+      '</b>. Only they see the full settings and approval queue.</p></div>';
+  }
+  const cp = S.campaign;
+  const tiers = cp.tiers || DEFAULT_TIERS;
+  let h = '<div class="banner"><span>Campaign settings</span></div>';
+  h += '<div class="card"><div class="grid g2">' +
+    '<div><label class="fl">Name</label><input type="text" data-fk="cpn" data-camp="name" value="' + esc(cp.name) + '"></div>' +
+    '<div><label class="fl">Code — players join with this</label><input type="text" value="' + esc(cp.code) + '" readonly style="background:var(--paper-3)"></div>' +
+    '<div><label class="fl">Game mode</label><select data-camp="mode">' +
+      GAME_MODES.map(m => '<option ' + (m === cp.mode ? "selected" : "") + '>' + esc(m) + '</option>').join("") + '</select></div>' +
+    '<div><label class="fl">Proficiency level</label><select data-camp="prof">' +
+      [1,2,3].map(p => '<option value="' + p + '" ' + (num(cp.prof,1)===p?"selected":"") + '>' + p + '</option>').join("") + '</select></div>' +
+    '<div><label class="fl">Rent day</label><input type="date" data-camp="rentDate" value="' + (cp.rentDue ? new Date(cp.rentDue).toISOString().slice(0,10) : "") + '"></div>' +
+    '<div><label class="fl">Enforce the spending limit</label><select data-camp="spendLimit">' +
+      '<option value="0" ' + (!cp.spendLimit?"selected":"") + '>Off</option><option value="1" ' + (cp.spendLimit?"selected":"") + '>On</option></select></div>' +
+    '<div><label class="fl">Campaign goodwill budget</label><input type="number" data-camp="goodwillBudget" min="0" value="' + num(cp.goodwillBudget,0) + '" placeholder="0 = not set"></div>' +
+    '</div>' +
+    '<p class="tiny muted" style="margin:10px 0 0">Game mode is a label the table agrees on — the book never spells out its mechanics, so nothing in the app keys off it. ' +
+    'Leave the goodwill budget at 0 to turn off the over-budget warning entirely; set it above 0 and every player\'s debt this month is compared against it, on their own sheet and on your dashboard here.</p></div>';
+
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Damage tiers</h2>' +
+    '<p class="tiny muted" style="margin:0 0 9px">The book gives injury descriptions for its mass, joule and newton scales but never a damage modifier. ' +
+    'This table is the bridge, and it is a house rule — edit it to taste. The forge reads it live.</p>' +
+    '<div class="tw"><table class="t"><thead><tr><th class="num">Tier</th><th>Name</th><th>Mass</th><th>Joules</th><th>Newtons</th><th>Type</th><th class="num">Mod</th><th class="num">Levels</th></tr></thead><tbody>';
+  tiers.forEach((t, i) => {
+    h += '<tr><td class="num">' + t.t + '</td><td>' + esc(t.n) + '</td>' +
+      '<td class="tiny muted">' + esc(t.kg) + '</td><td class="tiny muted">' + esc(t.j) + '</td><td class="tiny muted">' + esc(t.nt) + '</td>' +
+      '<td><select data-tier="type" data-i="' + i + '" style="min-width:92px">' +
+        '<option value="bashing" ' + (t.type==="bashing"?"selected":"") + '>Bashing</option>' +
+        '<option value="stun" ' + (t.type==="stun"?"selected":"") + '>Stun</option>' +
+        '<option value="lethal" ' + (t.type==="lethal"?"selected":"") + '>Lethal</option></select></td>' +
+      '<td class="num"><input type="number" data-fk="tm' + i + '" data-tier="mod" data-i="' + i + '" value="' + num(t.mod,0) + '" style="width:54px;text-align:center"></td>' +
+      '<td class="num"><input type="number" data-fk="tl' + i + '" data-tier="lv" data-i="' + i + '" value="' + num(t.lv,0) + '" style="width:54px;text-align:center"></td></tr>';
+  });
+  h += '</tbody></table></div>' +
+    '<div class="row" style="margin-top:10px"><button class="btn ghost sm" data-act="resettiers">Reset to the suggested table</button></div></div>';
+
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Crew</h2><div class="tw"><table class="t">' +
+    '<thead><tr><th>Character</th><th>Style</th><th class="num">XP left</th><th class="num">Slots</th><th>GM edit</th><th></th></tr></thead><tbody>' +
+    S.chars.map(c => '<tr><td><b>' + esc(c.name || "Unnamed") + '</b></td>' +
+      '<td class="tiny muted">' + esc(STYLES[c.styleKey].nick) + ' · p' + c.prof + '</td>' +
+      '<td class="num" style="' + (xpAvailable(c) < 0 ? "color:var(--red);font-weight:700" : "") + '">' + xpAvailable(c) + '</td>' +
+      '<td class="num" style="' + (slotsUsed(c) > slotsTotal(c) ? "color:var(--red);font-weight:700" : "") + '">' + slotsUsed(c) + '/' + slotsTotal(c) + '</td>' +
+      '<td class="tiny">' + (c.allowGmEdit ? "Allowed" : "View only") + '</td>' +
+      '<td><button class="btn ghost sm" data-act="open" data-c="' + c.id + '">Open</button></td></tr>').join("") +
+    '</tbody></table></div></div>';
+  return h;
+}
+
+/* ---------- reference ------------------------------------------------------ */
+function viewReference(){
+  let h = '<div class="banner"><span>Rules reference</span></div>';
+  h += '<div class="grid g2">';
+  h += '<div class="card"><h2 class="sec">Standard actions</h2><table class="t"><tbody>' +
+    STD_ACTIONS.map(a => '<tr><td style="width:120px"><b>' + esc(a[0]) + '</b></td><td class="tiny">' + esc(a[1]) + '</td></tr>').join("") +
+    '</tbody></table></div>';
+  h += '<div class="card"><h2 class="sec">Natural 20</h2><table class="t"><tbody>' +
+    CRITS.map(a => '<tr><td style="width:110px"><b>' + esc(a[0]) + '</b></td><td class="tiny">' + esc(a[1]) + '</td></tr>').join("") +
+    '</tbody></table><h2 class="sec" style="margin-top:12px">Natural 1</h2><table class="t"><tbody>' +
+    FUMBLES.map(a => '<tr><td style="width:110px"><b>' + esc(a[0]) + '</b></td><td class="tiny">' + esc(a[1]) + '</td></tr>').join("") +
+    '</tbody></table></div>';
+  h += '</div>';
+
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Taking damage</h2>' +
+    '<p style="margin:0 0 9px">Beat 15 + the damage modifier to soak it completely. If you fail you take a level of that damage, and every 5 you fail by adds another. ' +
+    'Lethal damage can\'t be soaked at all unless you\'re using an expression or wearing armor, and it incapacitates you on the spot.</p>' +
+    '<div class="grid g2"><div><h3 class="sub">Bashing and stun</h3><ol style="margin:0;padding-left:20px" class="tiny">' +
+      DMG_BASH.map(d => '<li>' + esc(d) + '</li>').join("") + '</ol></div>' +
+    '<div><h3 class="sub">Lethal</h3><ol style="margin:0;padding-left:20px" class="tiny">' +
+      DMG_LETHAL.map(d => '<li>' + esc(d) + '</li>').join("") + '</ol></div></div></div>';
+
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Paying rent</h2>' +
+    '<ol style="margin:0;padding-left:20px"><li>Each favour completed nets goodwill, set by the GM.</li>' +
+    '<li>You need a number of goodwill points every month to stay invisible.</li>' +
+    '<li>The more you use your abilities, the higher your rent gets.</li>' +
+    '<li>Goodwill doesn\'t have to come from good deeds. Badwill counts, so long as it\'s for a non-Neverborn.</li>' +
+    '<li>You have to be asked specifically. Anonymous good turns don\'t register.</li>' +
+    '<li>Higher proficiency means higher monthly rent.</li></ol></div>';
+
+  h += '<div class="card" style="margin-top:12px"><h2 class="sec">Lexicon</h2><table class="t"><tbody>' +
+    LEXICON.map(l => '<tr><td style="width:130px"><b>' + esc(l[0]) + '</b></td><td class="tiny">' + esc(l[1]) + '</td></tr>').join("") +
+    '</tbody></table></div>';
+  return h;
+}
+
+/* ---------- modal ----------------------------------------------------------- */
+function viewModal(){
+  const m = S.modal;
+  return '<div class="scrim" data-act="closemodal"><div class="modal" data-stop="1">' +
+    '<header><h3>' + esc(m.title) + '</h3><span class="right"><button class="btn ghost sm" data-act="closemodal">Close</button></span></header>' +
+    '<div class="body">' + m.body + '</div>' +
+    (m.foot ? '<div class="foot">' + m.foot + '</div>' : '') + '</div></div>';
+}
+/* ---------- sheet spread (read-only, mirrors the printed pages) ----------- */
+function viewSheet(c){
+  const st = STYLES[c.styleKey];
+  let h = '<div class="row" style="margin-bottom:12px">' +
+    '<div class="banner" style="margin:0"><span>Character sheet</span></div>' +
+    '<span class="right row" style="gap:7px">' +
+    '<button class="btn primary sm" data-act="pdf" data-mode="styled" data-c="' + c.id + '">Export styled PDF</button>' +
+    '<button class="btn sm" data-act="pdf" data-mode="clean" data-c="' + c.id + '">Export clean PDF</button>' +
+    '<button class="btn ghost sm" data-act="exportjson" data-c="' + c.id + '">Export data</button>' +
+    '</span></div>';
+
+  h += '<div class="card ruled">';
+  h += '<div class="row" style="align-items:flex-start;margin-bottom:12px">' +
+    '<div style="flex:1"><div style="font-family:var(--f-display);font-size:26px;line-height:1.1">' + esc(c.name || "Unnamed") + '</div>' +
+    '<div class="hand" style="font-size:15px">' + esc(st.n) + ' · ' + esc(st.power) + ' · proficiency ' + c.prof + '</div>' +
+    '<div class="tiny muted" style="margin-top:3px">' +
+      [["Height",c.height],["Weight",c.weight],["Age",c.age],["Gender",c.gender],["Hair",c.hair],["Eyes",c.eyes]]
+        .filter(x => x[1]).map(x => esc(x[0]) + " " + esc(x[1])).join(" · ") + '</div></div>' +
+    '<div style="text-align:right"><div class="tiny muted">XP</div>' +
+    '<div style="font-family:var(--f-display);font-size:26px;line-height:1">' + xpAvailable(c) + '</div></div></div>';
+
+  h += '<div class="grid" style="grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:18px">';
+
+  /* left rail */
+  h += '<div>';
+  h += '<h2 class="sec">Attributes</h2><table class="t"><tbody>' +
+    ATTRS.map(a => '<tr><td>' + esc(a.n) + '</td><td class="num">' + num(c.attrs[a.k],10) + '</td>' +
+      '<td class="num"><b>' + sign(attrModOf(c,a.k)) + '</b></td></tr>').join("") + '</tbody></table>';
+  h += '<h2 class="sec" style="margin-top:12px">Saves</h2><table class="t"><tbody>' +
+    SAVES.map(s => '<tr><td>' + esc(s.n) + '</td><td class="num"><b>' + sign(saveTotal(c,s.k)) + '</b></td></tr>').join("") + '</tbody></table>';
+  h += '<h2 class="sec" style="margin-top:12px">Combat</h2><table class="t"><tbody>' +
+    COMBAT.map(k => '<tr><td>' + esc(k.n) + '</td><td class="num"><b>' +
+      (k.k === "defense" ? combatTotal(c,k.k) : sign(combatTotal(c,k.k))) + '</b></td></tr>').join("") + '</tbody></table>';
+  h += '<h2 class="sec" style="margin-top:12px">Damage</h2>';
+  [["bashing","Bashing",6],["stun","Stun",6],["lethal","Lethal",3]].forEach(([k,l,mx]) => {
+    h += '<div class="row" style="margin-bottom:5px"><span class="tiny" style="min-width:56px">' + l + '</span><span class="track">' +
+      Array.from({length:mx}, (_,i) => '<span class="box ' + (k==="lethal"?"lethal ":"") + (i < num(c.dmg[k],0) ? "on" : "") + '" style="cursor:default"></span>').join("") +
+      '</span></div>';
+  });
+  h += '<h2 class="sec" style="margin-top:12px">Backgrounds</h2><table class="t"><tbody>' +
+    '<tr><td>Resources</td><td class="num"><b>' + num(c.bg.resources,0) + '</b></td></tr>' +
+    '<tr><td>Reputation</td><td class="num"><b>' + num(c.bg.reputation,0) + '</b></td></tr>' +
+    '<tr><td>Contacts</td><td class="num"><b>' + c.contacts.length + '</b></td></tr></tbody></table>';
+  if(c.contacts.length) h += '<p class="tiny muted" style="margin:5px 0 0">' + c.contacts.map(x => esc(x.name||"—")).join(", ") + '</p>';
+  h += '</div>';
+
+  /* right: expressions */
+  h += '<div><h2 class="sec">Expressions</h2>';
+  if(!c.expressions.length) h += '<p class="tiny muted">None.</p>';
+  c.expressions.forEach(e => {
+    const d = computeDebt(e);
+    h += '<div style="border:1px solid var(--rule);border-radius:3px;padding:9px 11px;margin-bottom:8px;background:var(--paper)">' +
+      '<div class="row"><b style="font-family:var(--f-display);font-weight:400">' + esc(e.name || "Untitled") + '</b>' +
+      '<span class="pill ' + e.status + '">' + statusLabel(e.status) + '</span>' +
+      '<span class="right tiny muted">P' + e.prof + ' · ' + ACTIONS[actionOf(e)] + ' · ' +
+        esc((RANGES.find(x=>x.k===e.range)||RANGES[0]).n) + ' · <b style="color:var(--red)">' + nf(d.final) + '</b> debt</span></div>' +
+      (e.desc ? '<p class="hand" style="margin:5px 0 0">' + esc(e.desc) + '</p>' : '') +
+      condSummary(e) + '</div>';
+  });
+  h += '<h2 class="sec" style="margin-top:14px">Skills</h2><div class="tw"><table class="t"><tbody>' +
+    allSkillRows(c).filter(r => num(r.entry.ranks,0) > 0 || num(r.entry.misc,0) !== 0)
+      .map(r => '<tr><td>' + esc(r.label) + '</td><td class="num tiny muted">' + r.def.attr.map(a=>a.toUpperCase()).join("/") + '</td>' +
+        '<td class="num">' + num(r.entry.ranks,0) + '</td><td class="num"><b>' + sign(skillTotal(c, r.def.k, r.entry)) + '</b></td></tr>').join("") +
+    '</tbody></table></div>';
+  if(c.gear.length){
+    h += '<h2 class="sec" style="margin-top:14px">Equipment</h2><ul style="margin:0;padding-left:18px">' +
+      c.gear.map(g => { const def = allGear().find(x => x.id === g.id); return def ? '<li>' + esc(def.n) + (g.note ? ' — ' + esc(g.note) : '') + '</li>' : ''; }).join("") + '</ul>';
+  }
+  if(c.backstory) h += '<h2 class="sec" style="margin-top:14px">Backstory</h2><p class="hand" style="margin:0">' + esc(c.backstory) + '</p>';
+  h += '</div></div></div>';
+  return h;
+}
+
+/* ---------- PDF ----------------------------------------------------------- */
+function buildPdf(c, mode){
+  const JS = window.jspdf && window.jspdf.jsPDF;
+  if(!JS){ toast("The PDF library didn't load. Try reloading the page."); return null; }
+  const doc = new JS({unit:"pt", format:"letter"});
+  const W = 612, H = 792, M = 36;
+  const styled = mode === "styled";
+  const RED = [206,32,39], INK = [20,19,18], GREY = [120,116,108], RULE = [201,196,182];
+  let page = 1;
+
+  function bg(){
+    if(!styled) return;
+    doc.setDrawColor(190,200,215); doc.setLineWidth(0.4);
+    for(let y = 96; y < H - 30; y += 19) doc.line(M - 10, y, W - M + 10, y);
+    doc.setDrawColor(RED[0], RED[1], RED[2]); doc.setLineWidth(0.7);
+    doc.line(M - 14, 26, M - 14, H - 20);
+  }
+  function banner(txt, x, y, w){
+    if(styled){
+      doc.setFillColor(RED[0], RED[1], RED[2]);
+      doc.roundedRect(x - 4, y - 11, (w || (doc.getTextWidth(txt) + 18)), 17, 7, 7, "F");
+      doc.setTextColor(255,255,255);
+    } else {
+      doc.setTextColor(INK[0], INK[1], INK[2]);
+      doc.setDrawColor(INK[0], INK[1], INK[2]); doc.setLineWidth(1.1);
+      doc.line(x - 4, y + 5, x - 4 + (w || (doc.getTextWidth(txt) + 18)), y + 5);
+    }
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    doc.text(txt.toUpperCase(), x + 4, y + 1);
+    doc.setTextColor(INK[0], INK[1], INK[2]);
+  }
+  function label(t, x, y){ doc.setFont("helvetica","bold"); doc.setFontSize(6.6); doc.setTextColor(GREY[0],GREY[1],GREY[2]); doc.text(t.toUpperCase(), x, y); doc.setTextColor(INK[0],INK[1],INK[2]); }
+  function body(t, x, y, size, style){ doc.setFont("helvetica", style || "normal"); doc.setFontSize(size || 9); doc.text(String(t), x, y); doc.setFont("helvetica","normal"); }
+  function plain(size){ doc.setFont("helvetica","normal"); doc.setFontSize(size || 9); }
+  function rule(x, y, w){ doc.setDrawColor(RULE[0],RULE[1],RULE[2]); doc.setLineWidth(0.5); doc.line(x, y, x + w, y); }
+  function newPage(){ doc.addPage(); page++; bg(); footer(); return 64; }
+  function footer(){
+    doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text("Neverborn — " + (c.name || "Unnamed") + " — page " + page, M, H - 22);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+  }
+
+  /* ---------------- page 1 ---------------- */
+  bg(); footer();
+  doc.setFont("helvetica","bold"); doc.setFontSize(23);
+  doc.setTextColor(INK[0],INK[1],INK[2]);
+  doc.text("NEVERBORN", M, 52);
+  if(styled){ doc.setFillColor(RED[0],RED[1],RED[2]); doc.rect(M, 57, 128, 3, "F"); }
+
+  const st = STYLES[c.styleKey];
+  let x2 = M + 190;
+  label("Character name", x2, 34); body(c.name || "—", x2, 46, 11, "bold"); rule(x2, 49, 200);
+  label("Sibling style", x2, 62); body(st.n + " — " + st.power, x2, 73); rule(x2, 76, 200);
+  label("Proficiency", x2, 89); body(String(c.prof), x2, 100); rule(x2, 103, 92);
+  label("XP left", W - M - 74, 34);
+  doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.text(String(xpAvailable(c)), W - M - 74, 54);
+  doc.setDrawColor(INK[0],INK[1],INK[2]); doc.setLineWidth(1); doc.rect(W - M - 82, 34, 74, 30);
+
+  const meta = [["Height",c.height],["Weight",c.weight],["Hair",c.hair],["Gender",c.gender],["Age",c.age],["Eyes",c.eyes]];
+  let mx = M, my = 122;
+  meta.forEach((m, i) => {
+    const col = i % 3, row = Math.floor(i / 3);
+    const px = M + col * 82, py = my + row * 20;
+    label(m[0], px, py); body(m[1] || "—", px + 40, py); rule(px + 38, py + 2, 40);
+  });
+
+  let ly = 182;
+  banner("Attributes", M, ly, 96); ly += 16;
+  label("Score", M + 96, ly - 2); label("Mod", M + 136, ly - 2); label("Temp", M + 170, ly - 2);
+  ly += 4;
+  ATTRS.forEach(a => {
+    body(a.n, M, ly, 9, "bold");
+    body(String(num(c.attrs[a.k],10)), M + 102, ly);
+    body(sign(attrModOf(c,a.k)), M + 140, ly, 9, "bold");
+    body(num(c.attrTemp[a.k],0) ? sign(num(c.attrTemp[a.k],0)) : "—", M + 176, ly);
+    rule(M, ly + 3, 200); ly += 15;
+  });
+
+  ly += 12; banner("Saves", M, ly, 70); ly += 18;
+  SAVES.forEach(s => {
+    body(s.n, M, ly, 9, "bold");
+    body(sign(saveTotal(c, s.k)), M + 102, ly, 9, "bold");
+    body("(" + sign(num(c.saveBase[s.k],0)) + " base " + sign(attrModOf(c,s.attr)) + " " + s.attr + ")", M + 132, ly, 7.4);
+    rule(M, ly + 3, 200); ly += 15;
+  });
+
+  ly += 12; banner("Combat", M, ly, 78); ly += 18;
+  COMBAT.forEach(k => {
+    body(k.n, M, ly, 9, "bold");
+    const tot = k.k === "defense" ? combatTotal(c,k.k) : sign(combatTotal(c,k.k));
+    body(String(tot), M + 102, ly, 9, "bold");
+    rule(M, ly + 3, 200); ly += 15;
+  });
+
+  ly += 12; banner("Damage", M, ly, 80); ly += 18;
+  [["Bashing","bashing",6],["Stun","stun",6],["Lethal","lethal",3]].forEach(([l,k,mx2]) => {
+    body(l, M, ly, 9, "bold");
+    for(let i = 0; i < mx2; i++){
+      const bx = M + 60 + i * 15;
+      if(k === "lethal") doc.setDrawColor(RED[0],RED[1],RED[2]); else doc.setDrawColor(INK[0],INK[1],INK[2]);
+      doc.setLineWidth(0.8); doc.rect(bx, ly - 8, 11, 11);
+      if(i < num(c.dmg[k],0)){
+        doc.line(bx + 1.5, ly - 6.5, bx + 9.5, ly + 1.5);
+        doc.line(bx + 9.5, ly - 6.5, bx + 1.5, ly + 1.5);
+      }
+    }
+    ly += 18;
+  });
+
+  /* expressions column */
+  const EX = M + 226, EW = W - M - EX;
+  let ey = 182;
+  banner("Expressions", EX, ey, 112); ey += 20;
+  const exprs = c.expressions.slice();
+  function drawExpr(e){
+    const d = computeDebt(e);
+    const descLines = doc.splitTextToSize(e.desc || "—", EW - 8);
+    const bits = [];
+    if(e.linkPort || e.linkDist) bits.push("Linked" + (e.linkObject ? ": " + e.linkObject : ""));
+    (e.conds||[]).forEach(x => bits.push("Condition: " + (x.text || (COND_TIERS.find(t=>t.v===num(x.v,0))||{}).n || "")));
+    if(num(e.condSave,0)) bits.push((COND_SAVE.find(x=>x.v===num(e.condSave,0))||{}).n);
+    (e.limits||[]).forEach(x => bits.push("Limitation: " + (x.text || (LIMIT_TIERS.find(t=>t.v===num(x.v,0))||{}).n || "")));
+    if(e.aoeFeet) bits.push(e.aoeFeet + " ft area of effect");
+    if(e.loops) bits.push("Loops ×" + e.loops);
+    if(e.tradeoff) bits.push("Traded: " + d.monthly + " monthly, " + d.activation + " activation");
+    const bitLines = bits.length ? doc.splitTextToSize(bits.join(" · "), EW - 8) : [];
+    const need = 30 + descLines.length * 10 + bitLines.length * 9;
+    if(ey + need > H - 46){ ey = newPage(); banner("Expressions, continued", EX, ey, 150); ey += 20; }
+    doc.setDrawColor(RULE[0],RULE[1],RULE[2]); doc.setLineWidth(0.6);
+    doc.rect(EX - 4, ey - 12, EW + 4, need, "S");
+    body(e.name || "Untitled", EX, ey, 10.5, "bold");
+    doc.setFont("helvetica","normal"); doc.setFontSize(7.4); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text("P" + e.prof + " · " + ACTIONS[actionOf(e)] + " · " + (RANGES.find(x=>x.k===e.range)||RANGES[0]).n, EX, ey + 9);
+    doc.setTextColor(RED[0],RED[1],RED[2]); doc.setFont("helvetica","bold"); doc.setFontSize(9);
+    doc.text(nf(d.final) + " debt", EX + EW - 58, ey + 1);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+    let yy = ey + 21;
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.4);
+    descLines.forEach(l => { doc.text(l, EX, yy); yy += 10; });
+    if(bitLines.length){
+      doc.setFontSize(7.4); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+      bitLines.forEach(l => { doc.text(l, EX, yy); yy += 9; });
+      doc.setTextColor(INK[0],INK[1],INK[2]);
+    }
+    ey += need + 8;
+  }
+  if(!exprs.length){ doc.setFontSize(8.4); doc.setTextColor(GREY[0],GREY[1],GREY[2]); doc.text("None recorded.", EX, ey); doc.setTextColor(INK[0],INK[1],INK[2]); }
+  exprs.forEach(drawExpr);
+
+  /* ---------------- page 2 ---------------- */
+  let y = newPage();
+  banner("Skills", M, y, 66); y += 20;
+  label("Skill", M, y - 4); label("Key", M + 190, y - 4); label("Ranks", M + 226, y - 4);
+  label("Attr", M + 266, y - 4); label("Misc", M + 302, y - 4); label("Total", M + 340, y - 4);
+  y += 13;
+  allSkillRows(c).forEach(r => {
+    if(y > H - 60) y = newPage();
+    body(r.label, M, y);
+    plain(7.4); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text(r.def.attr.map(a=>a.toUpperCase()).join("/"), M + 190, y);
+    doc.setTextColor(INK[0],INK[1],INK[2]); doc.setFontSize(9);
+    doc.text(String(num(r.entry.ranks,0)), M + 232, y);
+    doc.text(sign(bestAttrMod(c, r.def.attr)), M + 270, y);
+    doc.text(String(num(r.entry.misc,0)), M + 306, y);
+    doc.setFont("helvetica","bold"); doc.text(sign(skillTotal(c, r.def.k, r.entry)), M + 344, y);
+    doc.setFont("helvetica","normal");
+    rule(M, y + 3, 350); y += 14;
+  });
+
+  y += 14; if(y > H - 150) y = newPage();
+  banner("Equipment", M, y, 92); y += 20;
+  if(!c.gear.length){ doc.setFontSize(8.4); doc.text("None carried.", M, y); y += 14; }
+  c.gear.forEach(g => {
+    const def = allGear().find(x => x.id === g.id); if(!def) return;
+    if(y > H - 60) y = newPage();
+    body(def.n, M, y, 9, "bold");
+    plain(8); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text(doc.splitTextToSize((def.dmg !== "—" ? def.dmg + ". " : "") + def.note + (g.note ? " (" + g.note + ")" : ""), 330)[0] || "", M + 150, y);
+    doc.setTextColor(INK[0],INK[1],INK[2]); doc.setFontSize(9);
+    rule(M, y + 3, 480); y += 14;
+  });
+
+  y += 14; if(y > H - 160) y = newPage();
+  banner("Backgrounds", M, y, 104); y += 20;
+  [["Resources", num(c.bg.resources,0), BG_RESOURCES[num(c.bg.resources,0)]],
+   ["Reputation", num(c.bg.reputation,0), BG_REPUTATION[num(c.bg.reputation,0)]]].forEach(b => {
+    body(b[0] + " " + b[1], M, y, 9, "bold");
+    plain(8); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.splitTextToSize(b[2], 380).forEach((l, i) => doc.text(l, M + 100, y + i * 9));
+    doc.setTextColor(INK[0],INK[1],INK[2]); doc.setFontSize(9);
+    y += Math.max(14, doc.splitTextToSize(b[2], 380).length * 9 + 5);
+  });
+  if(c.contacts.length){
+    body("Contacts", M, y, 9, "bold"); y += 13;
+    c.contacts.forEach(ct => {
+      if(y > H - 60) y = newPage();
+      plain(8.4); doc.text("• " + (ct.name || "—") + (ct.note ? " — " + ct.note : ""), M + 8, y); y += 12;
+    });
+  }
+
+  if(c.backstory){
+    y += 14; if(y > H - 120) y = newPage();
+    banner("Backstory", M, y, 88); y += 20;
+    plain(9);
+    doc.splitTextToSize(c.backstory, W - M * 2).forEach(l => {
+      if(y > H - 46) y = newPage();
+      doc.text(l, M, y); y += 12;
+    });
+  }
+  if(c.portrait){
+    y += 10; if(y > H - 90) y = newPage();
+    banner("Self portrait", M, y, 104); y += 20;
+    plain(9);
+    doc.splitTextToSize(c.portrait, W - M * 2).forEach(l => {
+      if(y > H - 46) y = newPage();
+      doc.text(l, M, y); y += 12;
+    });
+  }
+  return doc;
+}
+
+async function exportPdf(c, mode){
+  const doc = buildPdf(c, mode);
+  if(!doc) return;
+  const blob = doc.output("blob");
+  const filename = (c.name || "neverborn").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() + ".pdf";
+  if(S.downloads){
+    try { await S.downloads.save({filename, data: blob}); toast("Sheet saved."); }
+    catch(e){
+      if(e && e.code === "declined") return;
+      toast("Couldn't save the PDF here. Try the browser's own download instead.");
+      fallbackDownload(blob, filename);
+    }
+  } else fallbackDownload(blob, filename);
+}
+function fallbackDownload(blob, filename){
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch(e){ toast("Downloads aren't available in this view."); }
+}
+async function exportJson(c){
+  const filename = (c.name || "neverborn").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-").toLowerCase() + ".json";
+  const data = JSON.stringify(c, null, 2);
+  if(S.downloads){
+    try { await S.downloads.save({filename, data}); toast("Data saved."); return; }
+    catch(e){ if(e && e.code === "declined") return; }
+  }
+  fallbackDownload(new Blob([data], {type:"application/json"}), filename);
+}
+/* =========================================================================
+   Events
+   ========================================================================= */
+function charById(id){ return S.chars.find(c => c.id === id); }
+function setPath(obj, path, val){
+  const parts = path.split(".");
+  let o = obj;
+  for(let i = 0; i < parts.length - 1; i++){ if(o[parts[i]] == null) o[parts[i]] = {}; o = o[parts[i]]; }
+  o[parts[parts.length - 1]] = val;
+}
+
+/* ---- theme ---------------------------------------------------------------- */
+function applyTheme(){
+  const t = localStorage.getItem("neverborn.theme");
+  if(t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+}
+function effectiveTheme(){
+  const t = localStorage.getItem("neverborn.theme");
+  if(t === "light" || t === "dark") return t;
+  return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+}
+
+/* ---- clicks -------------------------------------------------------------- */
+APP.addEventListener("click", async (ev) => {
+  const t = ev.target.closest("[data-act]");
+  if(!t) return;
+  if(t.dataset.act === "closemodal" && ev.target.closest("[data-stop]") && ev.target.closest("[data-act]") !== t) return;
+  const act = t.dataset.act;
+  const c = t.dataset.c ? charById(t.dataset.c) : curChar();
+
+  switch(act){
+    case "authtab": S.authView = t.dataset.m; render(); break;
+    case "authsignup": await doAuthSignup(); break;
+    case "authsignin": await doAuthSignin(); break;
+    case "authgoogle": await doAuthGoogle(); break;
+    case "authforgot": await doAuthForgot(); break;
+    case "signout": await doSignOut(); break;
+
+    case "theme": {
+      const next = effectiveTheme() === "dark" ? "light" : "dark";
+      localStorage.setItem("neverborn.theme", next);
+      applyTheme(); render(); break;
+    }
+
+    case "nav": S.view = t.dataset.v; if(S.view !== "expressions") S.forge = null; render(); window.scrollTo(0,0); break;
+    case "open": S.charId = t.dataset.c; S.view = "overview"; S.forge = null; render(); window.scrollTo(0,0); break;
+    case "entercamp": await enterCampaign(t.dataset.code); break;
+    case "backtolist":
+      S.campaign = null; S.chars = []; S.charId = null; S.view = "dashboard";
+      unsubCampaignScope();
+      render(); break;
+
+    case "createcamp": await createCampaign(); break;
+    case "joincamp": await joinCampaign(); break;
+    case "newchar": await createChar(); break;
+
+    case "toggle-gmedit":
+      if(!c || !ownsChar(c)) return;
+      c.allowGmEdit = !c.allowGmEdit; saveChar(c, true); render(); break;
+
+    case "attr": {
+      if(!canEditChar(c)) return;
+      const k = t.dataset.k, d = num(t.dataset.d,0);
+      c.attrs[k] = clamp(num(c.attrs[k],10) + d, 0, 60);
+      saveChar(c); render(); break;
+    }
+    case "save": {
+      if(!canEditChar(c)) return;
+      c.saveBase[t.dataset.k] = Math.max(0, num(c.saveBase[t.dataset.k],0) + num(t.dataset.d,0));
+      saveChar(c); render(); break;
+    }
+    case "combat": {
+      if(!canEditChar(c)) return;
+      c.combat[t.dataset.k] = Math.max(0, num(c.combat[t.dataset.k],0) + num(t.dataset.d,0));
+      saveChar(c); render(); break;
+    }
+    case "rank": {
+      if(!canEditChar(c)) return;
+      const k = t.dataset.k;
+      if(!c.skills[k]) c.skills[k] = {ranks:0, misc:0};
+      c.skills[k].ranks = Math.max(0, num(c.skills[k].ranks,0) + num(t.dataset.d,0));
+      saveChar(c); render(); break;
+    }
+    case "subrank": {
+      if(!canEditChar(c)) return;
+      const s = c.subSkills.find(x => x.id === t.dataset.id);
+      if(s){ s.ranks = Math.max(0, num(s.ranks,0) + num(t.dataset.d,0)); saveChar(c); render(); }
+      break;
+    }
+    case "addsub": {
+      if(!canEditChar(c)) return;
+      c.subSkills.push({id: uid("sk_"), key: t.dataset.k, label:"", ranks:0, misc:0});
+      saveChar(c); render(); break;
+    }
+    case "delsub": {
+      if(!canEditChar(c)) return;
+      c.subSkills = c.subSkills.filter(x => x.id !== t.dataset.id);
+      saveChar(c); render(); break;
+    }
+    case "bg": {
+      if(!canEditChar(c)) return;
+      c.bg[t.dataset.k] = clamp(num(c.bg[t.dataset.k],0) + num(t.dataset.d,0), 0, 5);
+      saveChar(c); render(); break;
+    }
+    case "addcontact":
+      if(!canEditChar(c)) return;
+      c.contacts.push({name:"", note:""}); saveChar(c); render(); break;
+    case "delcontact":
+      if(!canEditChar(c)) return;
+      c.contacts.splice(num(t.dataset.i,0), 1); saveChar(c); render(); break;
+
+    case "addgear": {
+      if(!canEditChar(c)) return;
+      const def = allGear().find(g => g.id === t.dataset.g);
+      if(def && num(def.res,1) > num(c.bg.resources,0)){
+        if(!confirm(def.n + " sits above Resources " + num(c.bg.resources,0) + ". Add it anyway? Your GM decides how you got it.")) return;
+      }
+      c.gear.push({id: t.dataset.g, note:""}); saveChar(c); render(); break;
+    }
+    case "delgear":
+      if(!canEditChar(c)) return;
+      c.gear.splice(num(t.dataset.i,0), 1); saveChar(c); render(); break;
+    case "addcustomgear": {
+      if(!isGM()) return;
+      const g = {
+        id: uid("cg_"),
+        n: (document.getElementById("cgn")||{}).value || "Custom item",
+        cat: (document.getElementById("cgc")||{}).value || "Kit",
+        ex: (document.getElementById("cge")||{}).value || "",
+        dmg: (document.getElementById("cgd")||{}).value || "—",
+        note: (document.getElementById("cgnote")||{}).value || "",
+        res: num((document.getElementById("cgr")||{}).value, 1)
+      };
+      S.campaign.gear = (S.campaign.gear || []).concat([g]);
+      await saveCampaign(); toast(g.n + " added to the campaign."); render(); break;
+    }
+
+    case "buyslot":
+      if(!canEditChar(c)) return;
+      c.extraSlots = num(c.extraSlots,0) + 1; saveChar(c); toast("Slot bought for 10 XP."); render(); break;
+
+    case "forge-new": {
+      if(!canEditChar(c)) return;
+      S.forge = blankExpression(STYLES[c.styleKey].power, num(t.dataset.p,1));
+      S.view = "expressions"; render(); window.scrollTo(0,0); break;
+    }
+    case "forge-edit": {
+      if(!canEditChar(c)) return;
+      const e = c.expressions.find(x => x.id === t.dataset.e);
+      if(e){ S.forge = JSON.parse(JSON.stringify(e)); S.view = "expressions"; render(); window.scrollTo(0,0); }
+      break;
+    }
+    case "forge-cancel": S.forge = null; render(); break;
+    case "forge-addcond": S.forge.conds.push({v:-5, text:""}); render(); break;
+    case "forge-delcond": S.forge.conds.splice(num(t.dataset.i,0),1); render(); break;
+    case "forge-addlimit": S.forge.limits.push({v:-5, text:""}); render(); break;
+    case "forge-dellimit": S.forge.limits.splice(num(t.dataset.i,0),1); render(); break;
+    case "forge-save": case "forge-submit": {
+      const e = S.forge;
+      if(!e.name.trim()){ toast("Give it a name first."); return; }
+      if(act === "forge-submit"){ e.status = "pending"; e.submittedAt = Date.now(); }
+      else if(e.status === "approved") e.status = "draft";
+      const i = c.expressions.findIndex(x => x.id === e.id);
+      if(i >= 0) c.expressions[i] = e; else c.expressions.push(e);
+      S.forge = null; saveChar(c, true);
+      toast(act === "forge-submit" ? "Sent to the GM." : "Saved.");
+      render(); window.scrollTo(0,0); break;
+    }
+    case "submit-expr": {
+      if(!canEditChar(c)) return;
+      const e = c.expressions.find(x => x.id === t.dataset.e);
+      if(e){ e.status = "pending"; e.submittedAt = Date.now(); saveChar(c, true); toast("Sent to the GM."); render(); }
+      break;
+    }
+    case "del-expr": {
+      if(!canEditChar(c)) return;
+      if(!confirm("Delete this expression?")) return;
+      c.expressions = c.expressions.filter(x => x.id !== t.dataset.e);
+      saveChar(c, true); render(); break;
+    }
+    case "review": S.view = "approvals"; render(); window.scrollTo(0,0); break;
+    case "approve": case "reject": {
+      if(!isGM()) return;
+      const ch = charById(t.dataset.c);
+      const e = ch && ch.expressions.find(x => x.id === t.dataset.e);
+      if(!e) return;
+      const noteEl = document.getElementById("gmn_" + e.id);
+      e.gmNote = noteEl ? noteEl.value : "";
+      e.status = act === "approve" ? "approved" : "changes";
+      saveChar(ch, true);
+      toast(act === "approve" ? "Approved." : "Sent back for changes.");
+      render(); break;
+    }
+
+    case "dmg": {
+      if(!canEditChar(c)) return;
+      const k = t.dataset.k, n = num(t.dataset.n,0);
+      c.dmg[k] = (num(c.dmg[k],0) === n) ? n - 1 : n;
+      if(c.dmg[k] < 0) c.dmg[k] = 0;
+      saveChar(c); render(); break;
+    }
+    case "goodwill":
+      if(!canEditChar(c)) return;
+      c.goodwill = Math.max(0, num(c.goodwill,0) + num(t.dataset.d,0)); saveChar(c); render(); break;
+    case "addgoodwill": {
+      if(!canEditChar(c)) return;
+      const el = document.getElementById("gwamt");
+      const v = num(el && el.value, 0);
+      if(!v){ toast("Enter an amount first."); return; }
+      c.goodwill = Math.max(0, num(c.goodwill,0) + v); saveChar(c); toast("+" + v + " goodwill."); render(); break;
+    }
+    case "useexpr": {
+      if(!canEditChar(c)) return;
+      const el = document.getElementById("usexpr");
+      const e = c.expressions.find(x => x.id === (el && el.value));
+      if(!e) return;
+      const d = computeDebt(e);
+      const amt = e.tradeoff ? d.activation : d.final;
+      c.debtLog = (c.debtLog||[]).concat([{at:Date.now(), amount:amt, note:(e.name||"Untitled") + (e.tradeoff ? " (activation)" : "")}]);
+      saveChar(c); toast(nf(amt) + " debt incurred."); render(); break;
+    }
+    case "newmonth": {
+      if(!canEditChar(c)) return;
+      if(!confirm("Start a new month? This clears the debt log and goodwill.")) return;
+      c.debtLog = []; c.goodwill = 0; saveChar(c, true); render(); break;
+    }
+    case "awardxp": {
+      const el = document.getElementById("xpamt"), nl = document.getElementById("xpnote");
+      const v = num(el && el.value, 0);
+      if(!v){ toast("Enter an amount first."); return; }
+      c.xpEarned = num(c.xpEarned, START_XP) + v;
+      c.xpLog = (c.xpLog||[]).concat([{delta:v, note:(nl && nl.value) || "Award", at:Date.now()}]);
+      saveChar(c, true); toast(sign(v) + " XP."); render(); break;
+    }
+    case "resettiers":
+      if(!isGM()) return;
+      S.campaign.tiers = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+      await saveCampaign(); render(); break;
+
+    case "pdf": exportPdf(c, t.dataset.mode); break;
+    case "exportjson": exportJson(c); break;
+    case "closemodal": S.modal = null; render(); break;
+  }
+});
+
+/* ---- bound inputs -------------------------------------------------------- */
+APP.addEventListener("input", (ev) => {
+  const el = ev.target;
+
+  if(el.dataset.forge != null && S.forge){
+    const p = el.dataset.forge;
+    const val = el.type === "checkbox" ? el.checked : (el.type === "number" ? (el.value === "" ? "" : num(el.value,0)) : el.value);
+    if(p.startsWith("scale.")) S.forge.scales[p.slice(6)] = num(val,0);
+    else if(p.startsWith("cond.v.")) S.forge.conds[num(p.slice(7),0)].v = num(val,0);
+    else if(p.startsWith("cond.text.")) S.forge.conds[num(p.slice(10),0)].text = val;
+    else if(p.startsWith("limit.v.")) S.forge.limits[num(p.slice(8),0)].v = num(val,0);
+    else if(p.startsWith("limit.text.")) S.forge.limits[num(p.slice(11),0)].text = val;
+    else if(p === "customCore") S.forge.customCore = (val === "" ? null : num(val,0));
+    else if(["linkPort","linkDist","condSave","tier"].includes(p)) S.forge[p] = num(val,0);
+    else S.forge[p] = val;
+    if(el.type === "text" || el.tagName === "TEXTAREA") scheduleLedger();
+    else render();
+    return;
+  }
+
+  if(el.dataset.camp != null && isGM()){
+    const p = el.dataset.camp;
+    if(p === "rentDate"){ S.campaign.rentDue = el.value ? new Date(el.value + "T12:00:00").getTime() : 0; }
+    else if(p === "prof") S.campaign.prof = num(el.value,1);
+    else if(p === "spendLimit") S.campaign.spendLimit = el.value === "1";
+    else if(p === "goodwillBudget") S.campaign.goodwillBudget = Math.max(0, num(el.value,0));
+    else S.campaign[p] = el.value;
+    saveCampaign();
+    if(p !== "name") render();
+    return;
+  }
+
+  if(el.dataset.tier != null && isGM()){
+    const i = num(el.dataset.i,0);
+    if(!S.campaign.tiers) S.campaign.tiers = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+    S.campaign.tiers[i][el.dataset.tier] = el.type === "number" ? num(el.value,0) : el.value;
+    saveCampaign();
+    return;
+  }
+
+  const bind = el.dataset.bind;
+  if(bind == null) return;
+  const c = charById(el.dataset.c);
+  if(!c || !canEditChar(c)) return;
+  const raw = el.type === "checkbox" ? el.checked : el.value;
+
+  if(bind === "sub.label" || bind === "sub.misc"){
+    const s = c.subSkills.find(x => x.id === el.dataset.id);
+    if(s) s[bind === "sub.label" ? "label" : "misc"] = bind === "sub.misc" ? num(raw,0) : raw;
+  } else if(bind.startsWith("skillmisc.")){
+    const k = bind.slice(10);
+    if(!c.skills[k]) c.skills[k] = {ranks:0, misc:0};
+    c.skills[k].misc = num(raw,0);
+  } else if(bind === "gear.note."){
+    const g = c.gear[num(el.dataset.i,0)]; if(g) g.note = raw;
+  } else if(bind === "contact.name." || bind === "contact.note."){
+    const ct = c.contacts[num(el.dataset.i,0)];
+    if(ct) ct[bind === "contact.name." ? "name" : "note"] = raw;
+  } else if(bind === "prof"){
+    c.prof = num(raw,1);
+  } else if(el.type === "number"){
+    setPath(c, bind, num(raw,0));
+  } else {
+    setPath(c, bind, raw);
+  }
+  saveChar(c);
+
+  const needsRerender = el.tagName === "SELECT" || el.type === "number" || el.type === "checkbox" ||
+                        bind === "name" || bind === "styleKey";
+  if(needsRerender) render(); else scheduleStatbar();
+});
+
+/* light touch updates that don't need a full repaint */
+let ledgerTimer = null;
+function scheduleLedger(){ clearTimeout(ledgerTimer); ledgerTimer = setTimeout(render, 450); }
+let sbTimer = null;
+function scheduleStatbar(){ clearTimeout(sbTimer); sbTimer = setTimeout(() => {
+  const c = curChar(); if(!c) return;
+  const who = APP.querySelector(".statbar .who"); if(who) who.textContent = c.name || "Unnamed";
+}, 200); }
+
+/* ---- auth adapter: real Firebase or a local-only demo fallback ----------- */
+function firebaseConfigured(){
+  const cfg = window.NEVERBORN_FIREBASE_CONFIG;
+  return !!(cfg && cfg.apiKey && !String(cfg.apiKey).startsWith("PASTE_"));
+}
+function localAuthBlob(){
+  try { return JSON.parse(localStorage.getItem("neverborn.localAuth")) || {users:{}, session:null}; }
+  catch(e){ return {users:{}, session:null}; }
+}
+function saveLocalAuthBlob(b){ localStorage.setItem("neverborn.localAuth", JSON.stringify(b)); }
+
+async function doAuthSignup(){
+  const email = (document.getElementById("authemail")||{}).value.trim().toLowerCase();
+  const name = (document.getElementById("authname")||{}).value.trim();
+  const pw = (document.getElementById("authpw")||{}).value;
+  const pw2 = (document.getElementById("authpw2")||{}).value;
+  if(!email || !pw){ toast("Enter an email and password."); return; }
+  if(!name){ toast("Tell the table what to call you."); return; }
+  if(pw.length < 6){ toast("Password needs to be at least 6 characters."); return; }
+  if(pw !== pw2){ toast("Passwords don't match."); return; }
+
+  if(S.localMode){
+    const blob = localAuthBlob();
+    if(blob.users[email]){ toast("An account with that email already exists here — try logging in."); return; }
+    const newUid = "local-" + uidShort();
+    blob.users[email] = {password: pw, uid: newUid, displayName: name};
+    blob.session = newUid;
+    saveLocalAuthBlob(blob);
+    await applySignedInUser(newUid, {displayName: name, email});
+    return;
+  }
+  // Firebase's auth-state listener can fire before this function's own
+  // profile write finishes — set this synchronously, before the await
+  // below, so the listener always sees the typed name regardless of timing.
+  S._pendingName = name;
+  try {
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pw);
+    await S.db.doc("users/" + cred.user.uid).set({displayName: name, email, createdAt: Date.now()});
+  } catch(e){ S._pendingName = null; toast(authErrorMessage(e)); }
+}
+
+async function doAuthSignin(){
+  const email = (document.getElementById("authemail")||{}).value.trim().toLowerCase();
+  const pw = (document.getElementById("authpw")||{}).value;
+  if(!email || !pw){ toast("Enter your email and password."); return; }
+
+  if(S.localMode){
+    const blob = localAuthBlob();
+    const u = blob.users[email];
+    if(!u || u.password !== pw){ toast("No match for that email and password on this device."); return; }
+    blob.session = u.uid;
+    saveLocalAuthBlob(blob);
+    await applySignedInUser(u.uid, {displayName: u.displayName, email});
+    return;
+  }
+  try { await firebase.auth().signInWithEmailAndPassword(email, pw); }
+  catch(e){ toast(authErrorMessage(e)); }
+}
+
+async function doAuthGoogle(){
+  if(S.localMode){ toast("Google sign-in needs Firebase set up first — see SETUP.md."); return; }
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await firebase.auth().signInWithPopup(provider);
+  } catch(e){ toast(authErrorMessage(e)); }
+}
+
+async function doAuthForgot(){
+  const email = (document.getElementById("authemail")||{}).value.trim().toLowerCase();
+  if(!email){ toast("Enter your email first."); return; }
+  if(S.localMode){ toast("Demo mode has no real email — nothing to reset yet."); return; }
+  try {
+    await firebase.auth().sendPasswordResetEmail(email);
+    toast("If that email has an account, a reset link is on its way.");
+    S.authView = "signin"; render();
+  } catch(e){ toast(authErrorMessage(e)); }
+}
+
+async function doSignOut(){
+  unsubAll();
+  if(S.localMode){
+    const blob = localAuthBlob(); blob.session = null; saveLocalAuthBlob(blob);
+    S.me = {id:null, name:""}; S.campaign = null; S.chars = []; S.myCampaigns = []; S.authView = "signin";
+    render(); return;
+  }
+  try { await firebase.auth().signOut(); } catch(e){}
+}
+
+function authErrorMessage(e){
+  const code = e && e.code;
+  const map = {
+    "auth/email-already-in-use": "That email already has an account — try logging in instead.",
+    "auth/invalid-email": "That doesn't look like a valid email.",
+    "auth/weak-password": "Password needs to be at least 6 characters.",
+    "auth/wrong-password": "Wrong password.",
+    "auth/user-not-found": "No account with that email.",
+    "auth/invalid-credential": "Email or password didn't match.",
+    "auth/too-many-requests": "Too many attempts — wait a bit and try again.",
+    "auth/popup-closed-by-user": "Google sign-in was closed before finishing.",
+    "auth/unauthorized-domain": "This domain isn't authorized for Google sign-in yet — add it under Firebase Authentication → Settings → Authorized domains."
+  };
+  return map[code] || ("Something went wrong (" + (code || "unknown error") + ").");
+}
+function uidShort(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+
+/* called once we have a real or local authenticated user */
+async function applySignedInUser(userId, fallback){
+  S.me.id = userId;
+  const prof = await loadOrCreateProfile(userId, fallback);
+  S.me.name = prof.displayName || fallback.displayName || "";
+  S.view = "dashboard";
+  subscribeMyCampaigns();
+  S.ready = true;
+  render();
+}
+
+async function loadOrCreateProfile(userId, fallback){
+  if(S.localMode){
+    const blob = localRead() || {};
+    blob.profiles = blob.profiles || {};
+    if(!blob.profiles[userId]){
+      blob.profiles[userId] = {displayName: fallback.displayName || "Player", email: fallback.email || ""};
+      localWrite(blob);
+    }
+    return blob.profiles[userId];
+  }
+  try {
+    const snap = await S.db.doc("users/" + userId).get();
+    if(snap.exists){
+      const data = snap.data();
+      if(S._pendingName){ data.displayName = S._pendingName; S._pendingName = null; }
+      return data;
+    }
+    const created = {
+      displayName: S._pendingName || fallback.displayName || (fallback.email||"Player").split("@")[0],
+      email: fallback.email || "", createdAt: Date.now()
+    };
+    S._pendingName = null;
+    await S.db.doc("users/" + userId).set(created);
+    return created;
+  } catch(e){ return {displayName: S._pendingName || fallback.displayName || "Player", email: fallback.email || ""}; }
+}
+
+/* ---- campaign lifecycle --------------------------------------------------- */
+function makeCode(){
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = ""; for(let i = 0; i < 6; i++) s += A[Math.floor(Math.random() * A.length)];
+  return s;
+}
+
+async function createCampaign(){
+  const nameEl = document.getElementById("newcampname");
+  const name = (nameEl && nameEl.value.trim()) || "A new crew";
+  const mode = (document.getElementById("newcampmode")||{}).value || GAME_MODES[2];
+  const prof = num((document.getElementById("newcampprof")||{}).value, 1);
+  const rentDue = Date.now() + 30 * 86400000;
+  const cp = {
+    code: makeCode(), name, gmId: S.me.id, gmName: S.me.name, mode, prof, rentDue,
+    playerIds: [], spendLimit:false, goodwillBudget: 0, tiers: JSON.parse(JSON.stringify(DEFAULT_TIERS)), gear:[],
+    createdAt: Date.now(), updatedAt: Date.now()
+  };
+  S.campaign = cp; S.chars = [];
+  await saveCampaign();
+  subscribeMyCampaigns();
+  subscribeCampaignScope();
+  S.view = "dashboard";
+  render();
+  toast("Campaign created. Share the code " + cp.code + " with your crew.");
+}
+
+async function joinCampaign(){
+  const el = document.getElementById("joincode");
+  const code = (el && el.value.trim().toUpperCase()) || "";
+  if(!code){ toast("Enter a campaign code."); return; }
+  if(S.localMode){
+    const blob = localRead();
+    if(!(blob && blob.campaign && blob.campaign.code === code)){ toast("No campaign with that code on this device."); return; }
+    const cp = blob.campaign;
+    cp.playerIds = cp.playerIds || [];
+    if(!cp.playerIds.includes(S.me.id)) cp.playerIds.push(S.me.id);
+    S.campaign = cp; S.chars = (blob.chars||[]).map(migrate);
+    await saveCampaign();
+    subscribeMyCampaigns();
+    S.view = "dashboard"; render();
+    return;
+  }
+  try {
+    const snap = await S.db.doc("campaigns/" + code).get();
+    if(!snap.exists){ toast("No campaign with that code. Check it with your GM."); return; }
+    S.campaign = snap.data();
+    await S.db.doc("campaigns/" + code).update({
+      playerIds: firebase.firestore.FieldValue.arrayUnion(S.me.id),
+      updatedAt: Date.now()
+    });
+    subscribeCampaignScope();
+    S.view = "dashboard"; render();
+  } catch(e){
+    if(e && e.code === "permission-denied") toast("Firestore refused that — check your security rules match firestore.rules.");
+    else toast("Couldn't reach that campaign. Try again in a moment.");
+  }
+}
+
+async function enterCampaign(code){
+  const cached = (S.myCampaigns||[]).find(x => x.code === code);
+  if(cached) S.campaign = cached;
+  S.chars = [];
+  subscribeCampaignScope();
+  S.view = "dashboard";
+  render();
+  window.scrollTo(0,0);
+}
+
+async function createChar(){
+  const c = newCharacter(S.me.id, S.campaign.code, S.campaign.prof);
+  S.chars.push(c); S.charId = c.id; S.view = "overview";
+  saveChar(c, true); render(); window.scrollTo(0,0);
+}
+
+/* ---- live subscriptions ---------------------------------------------------- */
+/* Two separate subscription scopes: "my campaigns" (always live once signed
+   in) and "campaign scope" (the currently open campaign's own doc + its
+   characters). Kept separate so entering/leaving a campaign doesn't disturb
+   the campaigns list underneath it. */
+let unsubMyCampaigns = [];
+let unsubScope = [];
+
+function unsubCampaignScope(){ unsubScope.forEach(u => { try{u();}catch(e){} }); unsubScope = []; }
+function unsubAll(){
+  unsubMyCampaigns.forEach(u => { try{u();}catch(e){} }); unsubMyCampaigns = [];
+  unsubCampaignScope();
+}
+
+function subscribeMyCampaigns(){
+  unsubMyCampaigns.forEach(u => { try{u();}catch(e){} }); unsubMyCampaigns = [];
+  if(S.localMode){
+    const blob = localRead();
+    S.myCampaigns = (blob && blob.campaign) ? [blob.campaign] : [];
+    return;
+  }
+  if(!S.db || !S.me.id) return;
+  let asGm = [], asPlayer = [];
+  const merge = () => {
+    const byCode = {};
+    asGm.concat(asPlayer).forEach(cp => { byCode[cp.code] = cp; });
+    S.myCampaigns = Object.values(byCode);
+    if(!S.campaign) render();
+  };
+  unsubMyCampaigns.push(S.db.collection("campaigns").where("gmId","==",S.me.id).onSnapshot(
+    (snap) => { asGm = []; snap.forEach(d => asGm.push(d.data())); merge(); },
+    (e) => handleWriteError(e)
+  ));
+  unsubMyCampaigns.push(S.db.collection("campaigns").where("playerIds","array-contains",S.me.id).onSnapshot(
+    (snap) => { asPlayer = []; snap.forEach(d => asPlayer.push(d.data())); merge(); },
+    (e) => handleWriteError(e)
+  ));
+}
+
+function subscribeCampaignScope(){
+  unsubCampaignScope();
+  if(S.localMode || !S.db || !S.campaign) return;
+  const code = S.campaign.code;
+  unsubScope.push(S.db.collection("characters").where("campaign", "==", code).onSnapshot(
+    (snap) => {
+      const incoming = [];
+      snap.forEach(d => incoming.push(migrate(d.data())));
+      const openForge = !!S.forge;
+      S.chars = incoming;
+      if(S.charId && !S.chars.find(x => x.id === S.charId)) S.charId = null;
+      if(!S.charId){ const mine = S.chars.find(x => ownsChar(x)); if(mine) S.charId = mine.id; }
+      if(!openForge) render(); else renderStatbarOnly();
+    },
+    (e) => handleWriteError(e)
+  ));
+  unsubScope.push(S.db.doc("campaigns/" + code).onSnapshot(
+    (snap) => { if(snap.exists && S.campaign && S.campaign.code === code){ S.campaign = snap.data(); if(!S.forge) render(); } },
+    (e) => handleWriteError(e)
+  ));
+}
+function renderStatbarOnly(){
+  const bar = APP.querySelector(".statbar");
+  if(bar) bar.outerHTML = viewStatbar();
+}
+
+/* ---- boot ------------------------------------------------------------------ */
+async function boot(){
+  applyTheme();
+
+  if(!firebaseConfigured() || typeof firebase === "undefined"){
+    S.localMode = true;
+    const blob = localAuthBlob();
+    S.authView = "signin";
+    if(blob.session && blob.users){
+      const entry = Object.entries(blob.users).find(([,u]) => u.uid === blob.session);
+      if(entry){ await applySignedInUser(blob.session, {displayName: entry[1].displayName, email: entry[0]}); return; }
+    }
+    S.ready = true; render();
+    return;
+  }
+
+  firebase.initializeApp(window.NEVERBORN_FIREBASE_CONFIG);
+  S.db = firebase.firestore();
+  S.authView = "signin";
+  firebase.auth().onAuthStateChanged(async (user) => {
+    unsubAll();
+    if(user){
+      await applySignedInUser(user.uid, {displayName: user.displayName || "", email: user.email || ""});
+    } else {
+      S.me = {id:null, name:""}; S.campaign = null; S.chars = []; S.myCampaigns = [];
+      S.ready = true; render();
+    }
+  });
+}
+
+render();
+boot();
+</script>
+</body>
+</html>
