@@ -243,6 +243,15 @@ table.t td.num,table.t th.num{text-align:center;font-variant-numeric:tabular-num
 .rolebadge.gm{background:var(--red);color:#fff}
 .rolebadge.player{background:var(--blue);color:#fff}
 
+/* NPC role pills */
+.pill.role-boss{background:var(--red);color:#fff;border:none}
+.pill.role-miniboss{background:var(--gold);color:#fff;border:none}
+.pill.role-contractor{background:var(--blue);color:#fff;border:none}
+.pill.role-minion{background:var(--paper-3);color:var(--ink-2);border:1px solid var(--rule-strong)}
+.npccard{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:11px 13px;cursor:pointer}
+.npccard:hover{border-color:var(--ink)}
+.npccard h4{margin:0;font-family:var(--f-display);font-size:15px;font-weight:400}
+
 .meter{height:7px;background:var(--paper-3);border-radius:4px;overflow:hidden;border:1px solid var(--rule)}
 .meter i{display:block;height:100%;background:var(--red)}
 .meter i.ok{background:var(--green)}
@@ -782,6 +791,49 @@ const LEXICON = [
   ["The Deadbeats","Your non-human parent."],
   ["Ostriches","Normal humans."]
 ];
+
+/* =========================================================================
+   NPCs — a lighter, GM-only cast of non-player inhabitants. Deliberately
+   simpler than the player character sheet: the book itself treats these
+   powers differently (Anointed abilities explicitly don't cost debt), and
+   a GM running several of these in one scene needs speed over depth.
+   ========================================================================= */
+const NPC_TYPES = {
+  trueborn:  {n:"Trueborn",  blurb:"Any naturally occurring sentient or sapient species — most often just people. The engine the Forces of Order exist to protect."},
+  mindborn:  {n:"Mindborn",  blurb:"Born from human belief and only real while someone remembers them. Subcategorized by which emotion feeds them.", hasKind:true},
+  halfborn:  {n:"Halfborn",  blurb:"Humans with supernatural abilities of murky origin, paying a steep personal price for their powers.", hasSubtype:true},
+  neverborn: {n:"Neverborn", blurb:"The offspring of a Trueborn and one of the Absolutes — the same origin every player character shares.", hasStyle:true},
+  anointed:  {n:"Anointed",  blurb:"Trueborn chosen by the Forces of Order to police the supernatural. Their powers resemble expressions but cost them nothing."}
+};
+const NPC_TYPE_KEYS = Object.keys(NPC_TYPES);
+
+const MINDBORN_KINDS = [
+  {k:"god",    n:"God",    d:"Pulls power from hope and faith."},
+  {k:"demon",  n:"Demon",  d:"Pulls power from fear and anxiety."},
+  {k:"spirit", n:"Spirit", d:"Pulls power from wonder and a sense of rightness — often tied to a specific place."}
+];
+
+/* The book's own Halfborn varieties, offered only as a placeholder/reference —
+   this field stays free text since the real taxonomy runs several layers deep
+   (a Shapechanger who is specifically a Skinwalker, for instance). */
+const HALFBORN_EXAMPLES = "Skinwalker, Mimic, Wer Folk, Sanguinist Vampire, Vitaean Vampire, Wizard, Alchemist, Ascetic, Technomancer, Spiritualist, Ghost, Revenant, Golem";
+
+const NPC_ROLES = [
+  {k:"boss",       n:"Boss"},
+  {k:"contractor", n:"Contractor"},
+  {k:"miniboss",   n:"Mini-Boss"},
+  {k:"minion",     n:"Minion"}
+];
+
+/* The book's Organizations chapter. */
+const ORGANIZATIONS = [
+  {k:"anointed_net", n:"The Anointed", blurb:"City-bound enforcers with no central authority, bound by a handful of unwritten rules between them."},
+  {k:"studio",        n:"The Studio", blurb:"A Mindborn media conglomerate — the shadow government of books, film, TV, and games."},
+  {k:"iron_mind",      n:"The Iron Mind Initiative", blurb:"A Trueborn coalition built to fight the supernatural, secretly steered by the very gods it claims to oppose."},
+  {k:"deus_scientiae",  n:"Deus Scientiae", blurb:"The new Mindborn gods of science and technology, quietly running the Iron Mind Initiative from the shadows."},
+  {k:"circle",          n:"The Circle", blurb:"A Halfborn mafia of mages and shapechangers, organized into 22 territorial Lodges."}
+];
+
 /* =========================================================================
    State, storage and derived maths
    ========================================================================= */
@@ -792,6 +844,8 @@ const S = {
   campaign:null,           // {code,name,gmId,mode,prof,rentDay,rentDue,tiers,gear}
   chars:[],                // every character in the campaign
   charId:null,             // the sheet currently open
+  npcs:[],                 // GM-only cast, current campaign
+  npcModal:null,           // the NPC currently open in the edit modal, or null
   view:"dashboard",
   modal:null,
   toast:null,
@@ -907,6 +961,49 @@ function migrate(c){
 
 const curChar = () => S.chars.find(c => c.id === S.charId) || null;
 const isGM = () => !!(S.campaign && S.me.id && S.campaign.gmId === S.me.id);
+
+/* ---------- NPCs (GM-only) ------------------------------------------------ */
+function newNpc(campaignCode, gmId){
+  return {
+    id: uid("npc_"), campaign: campaignCode, createdBy: gmId,
+    createdAt: Date.now(), updatedAt: Date.now(),
+    name: "", type: "trueborn",
+    subtype: "", mindbornKind: "", neverbornStyle: "",
+    role: "", org: "",
+    notes: "",
+    combat: {defense:10, soak:0, melee:0, ranged:0, initiative:0},
+    wounds: {current:0, max:10},
+    abilities: []
+  };
+}
+function migrateNpc(n){
+  if(!n) return n;
+  const base = newNpc(n.campaign, n.createdBy);
+  for(const k of Object.keys(base)){
+    if(n[k] === undefined) n[k] = base[k];
+    else if(base[k] && typeof base[k] === "object" && !Array.isArray(base[k])){
+      for(const kk of Object.keys(base[k])) if(n[k][kk] === undefined) n[k][kk] = base[k][kk];
+    }
+  }
+  return n;
+}
+/* "Type · Subtype" — the single label used everywhere an NPC is shown. */
+function npcTypeLabel(n){
+  const t = NPC_TYPES[n.type] || NPC_TYPES.trueborn;
+  if(t.hasKind){
+    const mk = MINDBORN_KINDS.find(x => x.k === n.mindbornKind);
+    return t.n + (mk ? " · " + mk.n : "");
+  }
+  if(t.hasSubtype) return t.n + (n.subtype ? " · " + n.subtype : "");
+  if(t.hasStyle){
+    const st = STYLES[n.neverbornStyle];
+    return t.n + (st ? " · " + st.n : "");
+  }
+  return t.n;
+}
+function npcRoleLabel(n){ const r = NPC_ROLES.find(x => x.k === n.role); return r ? r.n : ""; }
+function npcOrgLabel(n){ const o = ORGANIZATIONS.find(x => x.k === n.org); return o ? o.n : ""; }
+
 const ownsChar = (c) => !!(c && S.me.id && c.ownerId === S.me.id);
 function canEditChar(c){
   if(!c) return false;
@@ -1235,13 +1332,14 @@ function viewRoot(){
     case "sheet":     body = c ? viewSheet(c) : viewNoChar(); break;
     case "approvals": body = viewApprovals(); break;
     case "campaign":  body = viewCampaign(); break;
+    case "npcs":      body = viewNpcs(); break;
     case "reference": body = viewReference(); break;
     default: body = viewDashboard();
   }
   return '<div class="shell">' + viewSpine() + '<div class="main">' + viewMobNav() + viewStatbar() +
          '<div class="page">' + body + '</div>' +
          (S.toast ? '<div class="toast">' + esc(S.toast) + '</div>' : '') +
-         '</div></div>' + (S.modal ? viewModal() : '');
+         '</div></div>' + (S.modal ? viewModal() : '') + (S.npcModal ? viewNpcModal() : '');
 }
 
 /* ---------- navigation --------------------------------------------------- */
@@ -1252,6 +1350,7 @@ function navItems(){
     {g:"Crew", v:"dashboard", i:"◆", n:"Campaign"},
   ];
   if(isGM()) items.push({g:"Crew", v:"approvals", i:"✎", n:"Approvals", cnt:pend});
+  if(isGM()) items.push({g:"Crew", v:"npcs", i:"☠", n:"NPCs", cnt:(S.npcs||[]).length || null});
   if(isGM()) items.push({g:"Crew", v:"campaign", i:"⚙", n:"Settings"});
   if(c){
     items.push({g:"Character", v:"overview", i:"☰", n:"Overview"});
@@ -2376,6 +2475,115 @@ function viewReference(){
   return h;
 }
 
+/* ---------- NPCs (GM only) -------------------------------------------------- */
+function viewNpcs(){
+  if(!isGM()) return '<div class="empty"><p>Only the GM sees this.</p></div>';
+  let h = '<div class="row"><div class="banner" style="margin:0"><span>NPCs</span></div>' +
+    '<span class="right"><button class="btn primary sm" data-act="npc-new">New NPC</button></span></div>' +
+    '<p class="tiny muted" style="margin:-4px 0 14px">Only you can see this roster — players never have access to it, on screen or in the database.</p>';
+
+  const list = S.npcs || [];
+  if(!list.length){
+    h += '<div class="empty"><p>No NPCs yet.</p><button class="btn primary" data-act="npc-new">Create your first NPC</button></div>';
+    return h;
+  }
+
+  NPC_TYPE_KEYS.forEach(tk => {
+    const group = list.filter(n => n.type === tk);
+    if(!group.length) return;
+    h += '<h2 class="sec" style="margin-top:16px">' + esc(NPC_TYPES[tk].n) + '</h2><div class="grid g3">';
+    group.forEach(n => { h += npcCard(n); });
+    h += '</div>';
+  });
+  return h;
+}
+function npcCard(n){
+  const role = NPC_ROLES.find(x => x.k === n.role);
+  const org = npcOrgLabel(n);
+  const w = n.wounds || {current:0,max:10};
+  const hurt = w.max > 0 ? clamp(Math.round(w.current / w.max * 100), 0, 100) : 0;
+  return '<div class="npccard" data-act="npc-edit" data-id="' + n.id + '">' +
+    '<div class="row" style="margin-bottom:4px"><h4 style="flex:1">' + esc(n.name || "Unnamed NPC") + '</h4>' +
+    (role ? '<span class="pill role-' + role.k + '">' + esc(role.n) + '</span>' : '') + '</div>' +
+    '<div class="styl" style="font-family:var(--f-hand);font-size:13.5px;color:var(--ink-2);margin-bottom:6px">' + esc(npcTypeLabel(n)) +
+    (org ? ' · ' + esc(org) : '') + '</div>' +
+    '<div class="row" style="gap:5px;margin-bottom:6px">' +
+    '<span class="chip">Def <b>' + num(n.combat.defense,10) + '</b></span>' +
+    '<span class="chip">Soak <b>' + sign(num(n.combat.soak,0)) + '</b></span>' +
+    '<span class="chip">Mel <b>' + sign(num(n.combat.melee,0)) + '</b></span>' +
+    '<span class="chip">Rng <b>' + sign(num(n.combat.ranged,0)) + '</b></span></div>' +
+    '<div class="meter"><i style="width:' + hurt + '%;background:var(--red)"></i></div>' +
+    '<div class="tiny muted" style="margin-top:3px">' + num(w.current,0) + ' / ' + num(w.max,10) + ' wounds</div>' +
+    '</div>';
+}
+
+function viewNpcModal(){
+  const n = S.npcModal;
+  const t = NPC_TYPES[n.type] || NPC_TYPES.trueborn;
+  let body = '<div class="grid g2">' +
+    '<div><label class="fl">Name</label><input type="text" data-fk="npcname" data-npc="name" value="' + esc(n.name) + '" placeholder="Whoever\'s about to ruin the crew\'s night"></div>' +
+    '<div><label class="fl">Type</label><select data-npc="type">' +
+      NPC_TYPE_KEYS.map(k => '<option value="' + k + '" ' + (n.type===k?"selected":"") + '>' + esc(NPC_TYPES[k].n) + '</option>').join("") +
+      '</select></div>' +
+    '</div>' +
+    '<p class="tiny muted" style="margin:6px 0 0">' + esc(t.blurb) + '</p>';
+
+  if(t.hasKind){
+    body += '<div style="margin-top:10px"><label class="fl">Mindborn kind</label><select data-npc="mindbornKind">' +
+      '<option value="">Pick one</option>' +
+      MINDBORN_KINDS.map(k => '<option value="' + k.k + '" ' + (n.mindbornKind===k.k?"selected":"") + '>' + esc(k.n) + ' — ' + esc(k.d) + '</option>').join("") +
+      '</select></div>';
+  } else if(t.hasSubtype){
+    body += '<div style="margin-top:10px"><label class="fl">Subtype</label>' +
+      '<input type="text" data-fk="npcsubtype" data-npc="subtype" value="' + esc(n.subtype) + '" placeholder="e.g. Skinwalker, Sanguinist Vampire, Wizard">' +
+      '<p class="tiny muted" style="margin:5px 0 0">From the book: ' + esc(HALFBORN_EXAMPLES) + '. Free text — make up your own if none of these fit.</p></div>';
+  } else if(t.hasStyle){
+    body += '<div style="margin-top:10px"><label class="fl">Descended from</label><select data-npc="neverbornStyle">' +
+      '<option value="">Pick one</option>' +
+      STYLE_KEYS.map(k => '<option value="' + k + '" ' + (n.neverbornStyle===k?"selected":"") + '>' + esc(STYLES[k].n) + ' — ' + esc(STYLES[k].power) + '</option>').join("") +
+      '</select></div>';
+  }
+
+  body += '<div class="grid g2" style="margin-top:12px">' +
+    '<div><label class="fl">Role</label><select data-npc="role"><option value="">Unset</option>' +
+      NPC_ROLES.map(r => '<option value="' + r.k + '" ' + (n.role===r.k?"selected":"") + '>' + esc(r.n) + '</option>').join("") + '</select></div>' +
+    '<div><label class="fl">Organization</label><select data-npc="org"><option value="">None / independent</option>' +
+      ORGANIZATIONS.map(o => '<option value="' + o.k + '" ' + (n.org===o.k?"selected":"") + '>' + esc(o.n) + '</option>').join("") + '</select></div>' +
+    '</div>';
+  const org = ORGANIZATIONS.find(o => o.k === n.org);
+  if(org) body += '<p class="tiny muted" style="margin:5px 0 0">' + esc(org.blurb) + '</p>';
+
+  body += '<h3 class="sub" style="margin-top:14px">Combat</h3><div class="grid g4">' +
+    [["defense","Defense"],["soak","Soak"],["melee","Melee"],["ranged","Ranged"],["initiative","Initiative"]].map(([k,label]) =>
+      '<div><label class="fl">' + label + '</label><input type="number" data-fk="npcc' + k + '" data-npc="combat.' + k + '" value="' + num(n.combat[k], k==="defense"?10:0) + '"></div>').join("") +
+    '</div>';
+
+  body += '<h3 class="sub" style="margin-top:14px">Wounds</h3><div class="row">' +
+    '<label class="fl" style="margin:0 6px 0 0">Current</label><input type="number" data-fk="npcwc" data-npc="wounds.current" value="' + num(n.wounds.current,0) + '" min="0" style="max-width:80px">' +
+    '<label class="fl" style="margin:0 6px 0 10px">Max</label><input type="number" data-fk="npcwm" data-npc="wounds.max" value="' + num(n.wounds.max,10) + '" min="1" style="max-width:80px">' +
+    '</div>';
+
+  body += '<h3 class="sub" style="margin-top:14px">Abilities</h3>';
+  (n.abilities||[]).forEach((a, i) => {
+    body += '<div class="row" style="margin-bottom:6px;align-items:flex-start">' +
+      '<input type="text" data-fk="npcan' + i + '" data-npcab="name." data-i="' + i + '" value="' + esc(a.name||"") + '" placeholder="Ability name" style="max-width:170px">' +
+      '<input type="text" data-fk="npcad' + i + '" data-npcab="desc." data-i="' + i + '" value="' + esc(a.desc||"") + '" placeholder="What it does" style="flex:1">' +
+      '<button class="btn ghost sm" data-act="npc-delability" data-i="' + i + '">×</button></div>';
+  });
+  body += '<button class="btn ghost sm" data-act="npc-addability">Add an ability</button>';
+
+  body += '<h3 class="sub" style="margin-top:14px">Notes</h3>' +
+    '<textarea data-fk="npcnotes" data-npc="notes" placeholder="Tactics, backstory, what the crew should notice first">' + esc(n.notes) + '</textarea>';
+
+  return '<div class="scrim" data-act="npc-close"><div class="modal" data-stop="1">' +
+    '<header><h3>' + esc(n.name || "New NPC") + '</h3><span class="right"><button class="btn ghost sm" data-act="npc-close">Close</button></span></header>' +
+    '<div class="body">' + body + '</div>' +
+    '<div class="foot">' +
+    (S.npcs.find(x => x.id === n.id) ? '<button class="btn danger sm" data-act="npc-delete" style="margin-right:auto">Delete NPC</button>' : '') +
+    '<button class="btn primary sm" data-act="npc-save">Save</button>' +
+    '</div></div></div>';
+}
+
 /* ---------- modal ----------------------------------------------------------- */
 function viewModal(){
   const m = S.modal;
@@ -2758,13 +2966,39 @@ APP.addEventListener("click", async (ev) => {
     case "open": S.charId = t.dataset.c; S.view = "overview"; S.forge = null; render(); window.scrollTo(0,0); break;
     case "entercamp": await enterCampaign(t.dataset.code); break;
     case "backtolist":
-      S.campaign = null; S.chars = []; S.charId = null; S.view = "dashboard";
+      S.campaign = null; S.chars = []; S.charId = null; S.npcs = []; S.view = "dashboard";
       unsubCampaignScope();
       render(); break;
 
     case "createcamp": await createCampaign(); break;
     case "joincamp": await joinCampaign(); break;
     case "newchar": await createChar(); break;
+
+    case "npc-new":
+      if(!isGM()) return;
+      S.npcModal = newNpc(S.campaign.code, S.me.id);
+      render(); break;
+    case "npc-edit": {
+      if(!isGM()) return;
+      const n = (S.npcs||[]).find(x => x.id === t.dataset.id);
+      if(n) S.npcModal = JSON.parse(JSON.stringify(n));
+      render(); break;
+    }
+    case "npc-close": S.npcModal = null; render(); break;
+    case "npc-addability": S.npcModal.abilities.push({id: uid("ab_"), name:"", desc:""}); render(); break;
+    case "npc-delability": S.npcModal.abilities.splice(num(t.dataset.i,0), 1); render(); break;
+    case "npc-save": {
+      if(!isGM() || !S.npcModal) return;
+      if(!S.npcModal.name.trim()){ toast("Give the NPC a name first."); return; }
+      await saveNpc(S.npcModal);
+      S.npcModal = null; toast("Saved."); render(); break;
+    }
+    case "npc-delete": {
+      if(!isGM() || !S.npcModal) return;
+      if(!confirm("Delete " + (S.npcModal.name || "this NPC") + "?")) return;
+      await deleteNpc(S.npcModal.id);
+      S.npcModal = null; toast("Deleted."); render(); break;
+    }
 
     case "toggle-gmedit":
       if(!c || !ownsChar(c)) return;
@@ -2958,6 +3192,22 @@ APP.addEventListener("click", async (ev) => {
 /* ---- bound inputs -------------------------------------------------------- */
 APP.addEventListener("input", (ev) => {
   const el = ev.target;
+
+  if(el.dataset.npc != null && S.npcModal){
+    const p = el.dataset.npc;
+    const val = el.type === "number" ? num(el.value,0) : el.value;
+    if(p.startsWith("combat.")) S.npcModal.combat[p.slice(7)] = num(val,0);
+    else if(p.startsWith("wounds.")) S.npcModal.wounds[p.slice(7)] = Math.max(0, num(val,0));
+    else S.npcModal[p] = val;
+    if(el.tagName === "SELECT") render(); // type changes swap which fields show
+    return;
+  }
+  if(el.dataset.npcab != null && S.npcModal){
+    const field = el.dataset.npcab.slice(0, -1); // "name." -> "name"
+    const i = num(el.dataset.i,0);
+    if(S.npcModal.abilities[i]) S.npcModal.abilities[i][field] = el.value;
+    return;
+  }
 
   if(el.dataset.forge != null && S.forge){
     const p = el.dataset.forge;
@@ -3197,7 +3447,7 @@ async function createCampaign(){
     playerIds: [], spendLimit:false, goodwillBudget: 0, tiers: JSON.parse(JSON.stringify(DEFAULT_TIERS)), gear:[],
     createdAt: Date.now(), updatedAt: Date.now()
   };
-  S.campaign = cp; S.chars = [];
+  S.campaign = cp; S.chars = []; S.npcs = [];
   await saveCampaign();
   subscribeMyCampaigns();
   subscribeCampaignScope();
@@ -3216,7 +3466,7 @@ async function joinCampaign(){
     const cp = blob.campaign;
     cp.playerIds = cp.playerIds || [];
     if(!cp.playerIds.includes(S.me.id)) cp.playerIds.push(S.me.id);
-    S.campaign = cp; S.chars = (blob.chars||[]).map(migrate);
+    S.campaign = cp; S.chars = (blob.chars||[]).map(migrate); S.npcs = (blob.npcs||[]).map(migrateNpc);
     await saveCampaign();
     subscribeMyCampaigns();
     S.view = "dashboard"; render();
@@ -3241,7 +3491,7 @@ async function joinCampaign(){
 async function enterCampaign(code){
   const cached = (S.myCampaigns||[]).find(x => x.code === code);
   if(cached) S.campaign = cached;
-  S.chars = [];
+  S.chars = []; S.npcs = [];
   subscribeCampaignScope();
   S.view = "dashboard";
   render();
@@ -3313,10 +3563,43 @@ function subscribeCampaignScope(){
     (snap) => { if(snap.exists && S.campaign && S.campaign.code === code){ S.campaign = snap.data(); if(!S.forge) render(); } },
     (e) => handleWriteError(e)
   ));
+  if(isGM()){
+    unsubScope.push(S.db.collection("npcs").where("campaign", "==", code).onSnapshot(
+      (snap) => { const incoming = []; snap.forEach(d => incoming.push(migrateNpc(d.data()))); S.npcs = incoming; render(); },
+      (e) => handleWriteError(e)
+    ));
+  }
 }
 function renderStatbarOnly(){
   const bar = APP.querySelector(".statbar");
   if(bar) bar.outerHTML = viewStatbar();
+}
+
+/* ---- NPCs (GM only) --------------------------------------------------------- */
+async function saveNpc(n){
+  n.updatedAt = Date.now();
+  if(S.localMode){
+    const blob = localRead() || {};
+    const list = (blob.npcs || []).filter(x => x.id !== n.id);
+    list.push(n);
+    blob.npcs = list;
+    localWrite(blob);
+    S.npcs = list;
+    return;
+  }
+  try { await S.db.doc("npcs/" + n.id).set(stripUndef(n)); }
+  catch(e){ handleWriteError(e); }
+}
+async function deleteNpc(id){
+  if(S.localMode){
+    const blob = localRead() || {};
+    blob.npcs = (blob.npcs || []).filter(x => x.id !== id);
+    localWrite(blob);
+    S.npcs = blob.npcs;
+    return;
+  }
+  try { await S.db.doc("npcs/" + id).delete(); }
+  catch(e){ handleWriteError(e); }
 }
 
 /* ---- boot ------------------------------------------------------------------ */
