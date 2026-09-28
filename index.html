@@ -11,11 +11,14 @@
 <style>
 :root{
   --paper:#EDEAE2; --paper-2:#F6F4EE; --paper-3:#E2DED3;
-  --ink:#141312; --ink-2:#4A4741; --ink-3:#7C786F;
+  --ink:#141312; --ink-2:#4A4741; --ink-3:#66625A;
   --red:#CE2027; --red-ink:#8E1218; --red-wash:#F7DCDC;
-  --blue:#3F6FA8; --blue-wash:#DEE8F3;
+  --blue:#345F99; --blue-wash:#DEE8F3;
   --gold:#C9992B; --gold-wash:#F6EBCB;
-  --green:#3C7A47; --green-wash:#DEEDDF;
+  --green:#2F6B3A; --green-wash:#DEEDDF;
+  --gold-ink:#7A5A0E;
+  --fill-red:#BE2027; --fill-red-hover:#8E1218; --fill-blue:#3A6494; --fill-gold:#7F5D10;
+  --spine-bg:#141312; --spine-fg:#EDEAE2;
   --rule:#C9C4B6; --rule-strong:#9A9487;
   --line:rgba(63,111,168,.22);
   --shadow:0 1px 0 rgba(20,19,18,.10);
@@ -28,11 +31,11 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --paper:#15140F; --paper-2:#1D1B16; --paper-3:#26241D;
-    --ink:#EDEAE2; --ink-2:#B4AFA2; --ink-3:#847F73;
-    --red:#E8434A; --red-ink:#FFB9BB; --red-wash:#3A1618;
+    --ink:#EDEAE2; --ink-2:#B4AFA2; --ink-3:#9A9587;
+    --red:#F0575D; --red-ink:#FFB9BB; --red-wash:#3A1618;
     --blue:#7FAEE0; --blue-wash:#16232F;
     --gold:#E0B44E; --gold-wash:#2E2614;
-    --green:#74BE83; --green-wash:#16281A;
+    --green:#74BE83; --green-wash:#16281A; --gold-ink:#E0B44E; --spine-bg:#0B0A09;
     --rule:#37342B; --rule-strong:#575244;
     --line:rgba(127,174,224,.16);
     --shadow:0 1px 0 rgba(0,0,0,.4);
@@ -40,11 +43,11 @@
 }
 :root[data-theme="dark"]{
   --paper:#15140F; --paper-2:#1D1B16; --paper-3:#26241D;
-  --ink:#EDEAE2; --ink-2:#B4AFA2; --ink-3:#847F73;
-  --red:#E8434A; --red-ink:#FFB9BB; --red-wash:#3A1618;
+  --ink:#EDEAE2; --ink-2:#B4AFA2; --ink-3:#9A9587;
+  --red:#F0575D; --red-ink:#FFB9BB; --red-wash:#3A1618;
   --blue:#7FAEE0; --blue-wash:#16232F;
   --gold:#E0B44E; --gold-wash:#2E2614;
-  --green:#74BE83; --green-wash:#16281A;
+  --green:#74BE83; --green-wash:#16281A; --gold-ink:#E0B44E; --spine-bg:#0B0A09;
   --rule:#37342B; --rule-strong:#575244;
   --line:rgba(127,174,224,.16);
   --shadow:0 1px 0 rgba(0,0,0,.4);
@@ -70,15 +73,15 @@ a{color:var(--blue)}
 .shell{display:flex;flex:1;min-height:0;align-items:stretch}
 
 .spine{
-  width:186px;flex:0 0 186px;background:var(--ink);color:var(--paper);
+  width:186px;flex:0 0 186px;background:var(--spine-bg);color:var(--spine-fg);border-right:1px solid rgba(255,255,255,.10);
   display:flex;flex-direction:column;position:sticky;top:0;align-self:flex-start;
   height:100vh;overflow-y:auto;
 }
 .spine-logo{padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.14)}
 .spine-logo b{font-family:var(--f-display);font-size:21px;letter-spacing:.5px;display:block;line-height:1}
-.spine-logo span{font-family:var(--f-cond);font-size:11px;letter-spacing:.18em;color:rgba(255,255,255,.5);text-transform:uppercase}
+.spine-logo span{font-family:var(--f-cond);font-size:11px;letter-spacing:.18em;color:rgba(255,255,255,.62);text-transform:uppercase}
 .navgroup{padding:10px 0 4px}
-.navgroup>h4{font-family:var(--f-cond);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42);margin:0;padding:6px 14px}
+.navgroup>h4{font-family:var(--f-cond);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.62);margin:0;padding:6px 14px}
 .navitem{
   display:flex;align-items:center;gap:9px;width:100%;text-align:left;
   background:none;border:0;border-left:3px solid transparent;
@@ -87,8 +90,8 @@ a{color:var(--blue)}
 .navitem:hover{background:rgba(255,255,255,.07);color:#fff}
 .navitem.on{background:rgba(255,255,255,.11);color:#fff;border-left-color:var(--red)}
 .navitem .ico{width:17px;text-align:center;flex:0 0 17px;opacity:.9}
-.navitem .cnt{margin-left:auto;background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:9px;padding:0 6px;min-width:18px;text-align:center}
-.spine-foot{margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.14);font-size:12px;color:rgba(255,255,255,.5)}
+.navitem .cnt{margin-left:auto;background:var(--fill-red);color:#fff;font-size:11px;font-weight:700;border-radius:9px;padding:0 6px;min-width:18px;text-align:center}
+.spine-foot{margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.14);font-size:12px;color:rgba(255,255,255,.66)}
 .spine-foot button{background:none;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.8);border-radius:var(--radius);padding:4px 8px;font-size:12px;cursor:pointer;width:100%;margin-top:6px}
 .spine-foot button:hover{background:rgba(255,255,255,.1)}
 .whoami{display:flex;align-items:center;gap:6px;margin-bottom:6px}
@@ -122,7 +125,7 @@ a{color:var(--blue)}
 
 .banner{position:relative;display:inline-block;margin:0 0 12px;padding:3px 16px 5px;}
 .banner::before{
-  content:"";position:absolute;inset:0;background:var(--red);
+  content:"";position:absolute;inset:0;background:var(--fill-red);
   border-radius:44% 56% 48% 52%/58% 42% 56% 44%;transform:rotate(-.6deg);
 }
 .banner span{position:relative;font-family:var(--f-display);font-size:20px;color:#fff;letter-spacing:.4px}
@@ -153,6 +156,7 @@ input[type=text],input[type=number],input[type=date],select,textarea{
 }
 input[type=number]{-moz-appearance:textfield}
 textarea{resize:vertical;min-height:58px;font-family:var(--f-hand);font-size:15px}
+::placeholder{color:var(--ink-3);opacity:1}
 input:focus,select:focus,textarea:focus{border-color:var(--red);outline:none;box-shadow:0 0 0 2px var(--red-wash)}
 label.fl{display:block;font-family:var(--f-cond);font-weight:700;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:0 0 3px}
 .btn{
@@ -160,13 +164,13 @@ label.fl{display:block;font-family:var(--f-cond);font-weight:700;font-size:11px;
   padding:5px 12px;cursor:pointer;font-weight:600;font-size:14px;
 }
 .btn:hover{background:var(--ink);color:var(--paper)}
-.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
-.btn.primary:hover{background:var(--red-ink);border-color:var(--red-ink)}
+.btn.primary{background:var(--fill-red);border-color:var(--fill-red);color:#fff}
+.btn.primary:hover{background:var(--fill-red-hover);border-color:var(--fill-red-hover);color:#fff}
 .btn.sm{padding:3px 8px;font-size:12.5px}
 .btn.ghost{border-color:var(--rule-strong);font-weight:500}
 .btn:disabled{opacity:.42;cursor:not-allowed}
 .btn.danger{border-color:var(--red);color:var(--red)}
-.btn.danger:hover{background:var(--red);color:#fff}
+.btn.danger:hover{background:var(--fill-red);color:#fff}
 .stepper{display:inline-flex;align-items:center;gap:0;border:1px solid var(--rule-strong);border-radius:var(--radius);overflow:hidden;background:var(--paper)}
 .stepper button{width:26px;height:27px;border:0;background:none;cursor:pointer;font-weight:700;color:var(--ink-2)}
 .stepper button:hover:not(:disabled){background:var(--ink);color:var(--paper)}
@@ -197,11 +201,11 @@ table.t td.num,table.t th.num{text-align:center;font-variant-numeric:tabular-num
 
 .pill{font-size:11.5px;font-weight:600;border-radius:10px;padding:1px 8px;display:inline-block;white-space:nowrap}
 .pill.draft{background:var(--paper-3);color:var(--ink-2);border:1px solid var(--rule-strong)}
-.pill.pending{background:var(--gold-wash);color:var(--gold);border:1px solid var(--gold)}
+.pill.pending{background:var(--gold-wash);color:var(--gold-ink);border:1px solid var(--gold)}
 .pill.approved{background:var(--green-wash);color:var(--green);border:1px solid var(--green)}
 .pill.changes{background:var(--red-wash);color:var(--red-ink);border:1px solid var(--red)}
 .pill.p1{background:var(--blue-wash);color:var(--blue);border:1px solid var(--blue)}
-.pill.p2{background:var(--gold-wash);color:var(--gold);border:1px solid var(--gold)}
+.pill.p2{background:var(--gold-wash);color:var(--gold-ink);border:1px solid var(--gold)}
 .pill.p3{background:var(--red-wash);color:var(--red-ink);border:1px solid var(--red)}
 
 .ledger{font-size:13px}
@@ -240,13 +244,13 @@ table.t td.num,table.t th.num{text-align:center;font-variant-numeric:tabular-num
 
 /* role badges on campaign cards */
 .rolebadge{font-family:var(--f-cond);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border-radius:9px;padding:2px 8px;display:inline-block}
-.rolebadge.gm{background:var(--red);color:#fff}
-.rolebadge.player{background:var(--blue);color:#fff}
+.rolebadge.gm{background:var(--fill-red);color:#fff}
+.rolebadge.player{background:var(--fill-blue);color:#fff}
 
 /* NPC role pills */
-.pill.role-boss{background:var(--red);color:#fff;border:none}
-.pill.role-miniboss{background:var(--gold);color:#fff;border:none}
-.pill.role-contractor{background:var(--blue);color:#fff;border:none}
+.pill.role-boss{background:var(--fill-red);color:#fff;border:none}
+.pill.role-miniboss{background:var(--fill-gold);color:#fff;border:none}
+.pill.role-contractor{background:var(--fill-blue);color:#fff;border:none}
 .pill.role-minion{background:var(--paper-3);color:var(--ink-2);border:1px solid var(--rule-strong)}
 .npccard{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:11px 13px;cursor:pointer}
 .npccard:hover{border-color:var(--ink)}
@@ -266,7 +270,7 @@ table.t td.num,table.t th.num{text-align:center;font-variant-numeric:tabular-num
 .mobnav{display:none}
 @media (max-width:820px){
   .spine{display:none}
-  .mobnav{display:flex;overflow-x:auto;gap:4px;background:var(--ink);padding:6px 8px;position:sticky;top:0;z-index:40}
+  .mobnav{display:flex;overflow-x:auto;gap:4px;background:var(--spine-bg);padding:6px 8px;position:sticky;top:0;z-index:40}
   .mobnav button{background:none;border:0;color:rgba(255,255,255,.72);padding:5px 10px;border-radius:var(--radius);white-space:nowrap;font-size:13.5px;cursor:pointer}
   .mobnav button.on{background:rgba(255,255,255,.14);color:#fff}
   .statbar{top:39px;padding:6px 10px}
@@ -1589,7 +1593,7 @@ function viewDashboard(){
   if(isGM()){
     const pend = pendingApprovals();
     if(pend.length){
-      h += '<div class="card" style="border-color:var(--gold);margin-bottom:14px"><h3 class="sub">Waiting on you</h3>' +
+      h += '<div class="card" style="border-color:var(--gold-ink);margin-bottom:14px"><h3 class="sub">Waiting on you</h3>' +
         pend.slice(0,4).map(p => '<div class="row" style="padding:5px 0;border-bottom:1px solid var(--rule)">' +
           '<div style="flex:1;min-width:0"><b>' + esc(p.e.name || "Untitled") + '</b> <span class="tiny muted">· ' + esc(p.c.name || "Unnamed") + '</span>' +
           '<div class="tiny muted">' + esc(p.e.power) + ' p' + p.e.prof + ' · ' + computeDebt(p.e).final + ' debt · ' + ACTIONS[actionOf(p.e)].toLowerCase() + ' action</div></div>' +
@@ -1617,7 +1621,7 @@ function viewDashboard(){
     if(ob.over) status += ' · <span class="tiny" style="color:var(--red)">' + nf(ob.diff) + ' over budget</span>';
     let injury = "";
     if(lethal) injury = '<span class="tiny" style="color:var(--red)">' + lethal + ' lethal taken</span>';
-    else if(bash) injury = '<span class="tiny" style="color:var(--gold)">' + bash + ' bashing or stun</span>';
+    else if(bash) injury = '<span class="tiny" style="color:var(--gold-ink)">' + bash + ' bashing or stun</span>';
     h += '<div class="crewcard ' + (ownsChar(c) ? "me" : "") + '" style="' + (ob.over ? "border-color:var(--red)" : "") + '" data-act="open" data-c="' + c.id + '">' +
       '<h4>' + esc(c.name || "Unnamed") + '</h4>' +
       '<div class="styl">' + esc(st.nick) + ' · ' + esc(st.power.toLowerCase()) + ' · p' + c.prof + '</div>' +
@@ -1658,7 +1662,7 @@ function viewOverview(c){
     '</div></div>';
 
   if(c.prof > S.campaign.prof){
-    h += '<div class="card" style="border-color:var(--gold);background:var(--gold-wash)"><b>Above the campaign level.</b> ' +
+    h += '<div class="card" style="border-color:var(--gold-ink);background:var(--gold-wash)"><b>Above the campaign level.</b> ' +
       'This campaign runs at proficiency ' + S.campaign.prof + '. The GM will see this flagged.</div>';
   }
 
@@ -2575,7 +2579,7 @@ function viewNpcModal(){
   body += '<h3 class="sub" style="margin-top:14px">Notes</h3>' +
     '<textarea data-fk="npcnotes" data-npc="notes" placeholder="Tactics, backstory, what the crew should notice first">' + esc(n.notes) + '</textarea>';
 
-  return '<div class="scrim" data-act="npc-close"><div class="modal" data-stop="1">' +
+  return '<div class="scrim" data-act="npc-close" data-scrim="1"><div class="modal" data-stop="1">' +
     '<header><h3>' + esc(n.name || "New NPC") + '</h3><span class="right"><button class="btn ghost sm" data-act="npc-close">Close</button></span></header>' +
     '<div class="body">' + body + '</div>' +
     '<div class="foot">' +
@@ -2587,7 +2591,7 @@ function viewNpcModal(){
 /* ---------- modal ----------------------------------------------------------- */
 function viewModal(){
   const m = S.modal;
-  return '<div class="scrim" data-act="closemodal"><div class="modal" data-stop="1">' +
+  return '<div class="scrim" data-act="closemodal" data-scrim="1"><div class="modal" data-stop="1">' +
     '<header><h3>' + esc(m.title) + '</h3><span class="right"><button class="btn ghost sm" data-act="closemodal">Close</button></span></header>' +
     '<div class="body">' + m.body + '</div>' +
     (m.foot ? '<div class="foot">' + m.foot + '</div>' : '') + '</div></div>';
@@ -2944,7 +2948,7 @@ function effectiveTheme(){
 APP.addEventListener("click", async (ev) => {
   const t = ev.target.closest("[data-act]");
   if(!t) return;
-  if(t.dataset.act === "closemodal" && ev.target.closest("[data-stop]") && ev.target.closest("[data-act]") !== t) return;
+  if(t.dataset.scrim != null && ev.target !== t) return;
   const act = t.dataset.act;
   const c = t.dataset.c ? charById(t.dataset.c) : curChar();
 
