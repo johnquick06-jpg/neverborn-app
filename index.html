@@ -252,9 +252,28 @@ table.t td.num,table.t th.num{text-align:center;font-variant-numeric:tabular-num
 .pill.role-miniboss{background:var(--fill-gold);color:#fff;border:none}
 .pill.role-contractor{background:var(--fill-blue);color:#fff;border:none}
 .pill.role-minion{background:var(--paper-3);color:var(--ink-2);border:1px solid var(--rule-strong)}
+.pill.role-ally{background:var(--green-wash);color:var(--green);border:1px solid var(--green)}
 .npccard{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:11px 13px;cursor:pointer}
 .npccard:hover{border-color:var(--ink)}
 .npccard h4{margin:0;font-family:var(--f-display);font-size:15px;font-weight:400}
+
+/* module color coding */
+.moddot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:0 0 11px;border:1px solid rgba(0,0,0,.25)}
+.modbadge{font-family:var(--f-cond);font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:9px;padding:2px 9px 2px 7px;display:inline-flex;align-items:center;gap:5px;color:#fff;white-space:nowrap}
+.modswatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;display:inline-block;padding:0}
+.modswatch.on{border-color:var(--ink)}
+.modcard{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:12px 14px;border-left-width:5px;border-left-style:solid}
+.modcard h4{margin:0 0 3px;font-family:var(--f-display);font-size:16px;font-weight:400}
+.actcard{border:1px solid var(--rule);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.actcard>.achead{background:var(--paper-3);padding:8px 12px;font-family:var(--f-cond);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase}
+.scenecard{border-top:1px solid var(--rule);padding:12px 14px}
+.scenecard h4{margin:0 0 6px;font-family:var(--f-display);font-size:15px;font-weight:400}
+.scenecard .sechead{font-family:var(--f-cond);font-weight:700;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:10px 0 3px}
+.scenecard .gmonly{background:var(--red-wash);border:1px dashed var(--red);border-radius:var(--radius);padding:8px 10px;margin-top:8px}
+.lockedscene{border-top:1px solid var(--rule);padding:10px 14px;color:var(--ink-3);font-size:13.5px;display:flex;align-items:center;gap:7px}
+.mapwrap{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);padding:8px;margin:6px 0}
+.maptitle{font-size:13.5px;color:var(--ink-2);margin-bottom:4px}
+.revealrow{display:flex;align-items:center;gap:8px;margin-top:8px}
 
 .meter{height:7px;background:var(--paper-3);border-radius:4px;overflow:hidden;border:1px solid var(--rule)}
 .meter i{display:block;height:100%;background:var(--red)}
@@ -826,8 +845,27 @@ const NPC_ROLES = [
   {k:"boss",       n:"Boss"},
   {k:"contractor", n:"Contractor"},
   {k:"miniboss",   n:"Mini-Boss"},
-  {k:"minion",     n:"Minion"}
+  {k:"minion",     n:"Minion"},
+  {k:"ally",       n:"Ally / Quest Giver"}
 ];
+
+/* Preset palette a GM picks from when color-coding a module. Each module
+   gets one of these; the key is stored on the module, the hex pair is
+   theme-safe (readable swatch + readable text on the wash). */
+const MODULE_COLORS = [
+  {k:"crimson",  n:"Crimson",  hex:"#BE2027", wash:"#F7DCDC"},
+  {k:"amber",    n:"Amber",    hex:"#A4560F", wash:"#F6E6CB"},
+  {k:"gold",     n:"Gold",     hex:"#7F5D10", wash:"#F6EBCB"},
+  {k:"olive",    n:"Olive",    hex:"#5C6120", wash:"#EAEBCF"},
+  {k:"green",    n:"Green",    hex:"#2F6B3A", wash:"#DEEDDF"},
+  {k:"teal",     n:"Teal",     hex:"#1F6B63", wash:"#D7EDEA"},
+  {k:"blue",     n:"Blue",     hex:"#345F99", wash:"#DEE8F3"},
+  {k:"indigo",   n:"Indigo",   hex:"#4B4A99", wash:"#E1E0F3"},
+  {k:"violet",   n:"Violet",   hex:"#7A3B99", wash:"#EADCF3"},
+  {k:"magenta",  n:"Magenta",  hex:"#99325F", wash:"#F3DCE8"},
+  {k:"slate",    n:"Slate",    hex:"#4A5560", wash:"#DEE2E5"}
+];
+function moduleColor(k){ return MODULE_COLORS.find(x => x.k === k) || MODULE_COLORS[0]; }
 
 /* The book's Organizations chapter. */
 const ORGANIZATIONS = [
@@ -850,6 +888,11 @@ const S = {
   charId:null,             // the sheet currently open
   npcs:[],                 // GM-only cast, current campaign
   npcModal:null,           // the NPC currently open in the edit modal, or null
+  modules:[],              // GM's reusable module library (account-level)
+  campaignModules:[],      // modules attached to the open campaign + reveal state (GM+players)
+  openModuleId:null,       // library module currently expanded in the Modules view
+  modModal:null,           // module metadata currently open in the edit modal, or null
+  sceneModal:null,         // scene currently open in the scene editor, or null
   view:"dashboard",
   modal:null,
   toast:null,
@@ -977,7 +1020,8 @@ function newNpc(campaignCode, gmId){
     notes: "",
     combat: {defense:10, soak:0, melee:0, ranged:0, initiative:0},
     wounds: {current:0, max:10},
-    abilities: []
+    abilities: [],
+    moduleId: "", moduleColor: "", templateId: ""   // set when this NPC was copied in from a module
   };
 }
 function migrateNpc(n){
@@ -991,6 +1035,422 @@ function migrateNpc(n){
   }
   return n;
 }
+/* ---------- Modules (GM's reusable adventure library) ---------------------
+   A module lives on the GM's own account (ownerId), independent of any one
+   campaign, so it can be attached to several. Acts contain scenes; each
+   scene is split into the same sections the book itself uses. GM Notes and
+   sample dialogue never leave the module/campaignModules-GM-view — they are
+   simply never copied into a campaignModule's revealedContent, so a player
+   who somehow read that document still couldn't see them. NPC sheets live
+   only inside the module itself and the normal GM-only npcs collection. */
+function newModule(ownerId, ownerName){
+  return {
+    id: uid("mod_"), ownerId, ownerName,
+    createdAt: Date.now(), updatedAt: Date.now(),
+    name: "New module", color: MODULE_COLORS[0].k, summary: "", seedKey: "",
+    acts: [], npcs: [], maps: []
+  };
+}
+function migrateModule(m){
+  if(!m) return m;
+  const base = newModule(m.ownerId, m.ownerName);
+  for(const k of Object.keys(base)) if(m[k] === undefined) m[k] = base[k];
+  (m.acts||[]).forEach(a => (a.scenes||[]).forEach(sc => migrateScene(sc)));
+  return m;
+}
+function newAct(name){ return {id: uid("act_"), name: name || "New Act", scenes: []}; }
+function newScene(name){
+  return {
+    id: uid("scn_"), name: name || "New Scene",
+    narrative: "", options: [], enemies: [],
+    dialogue: [],   // [{who, text}] — GM-only performance notes
+    gmNotes: [],    // GM-only
+    reward: "", mapId: "", npcIds: []
+  };
+}
+function migrateScene(sc){
+  const base = newScene();
+  for(const k of Object.keys(base)) if(sc[k] === undefined) sc[k] = base[k];
+  return sc;
+}
+function newMap(name){ return {id: uid("map_"), name: name || "New Map", w: 16, h: 20, rooms: []}; }
+function allScenes(m){
+  const out = [];
+  (m.acts||[]).forEach(a => (a.scenes||[]).forEach(sc => out.push({act:a, scene:sc})));
+  return out;
+}
+function findScene(m, sceneId){ return allScenes(m).find(x => x.scene.id === sceneId) || null; }
+function findMap(m, mapId){ return (m.maps||[]).find(x => x.id === mapId) || null; }
+
+/* ---------- campaignModules (per-campaign attach + reveal state) ---------- */
+function cmId(campaignCode, moduleId){ return campaignCode + "__" + moduleId; }
+function newCampaignModule(campaign, mod, uidMe){
+  return {
+    id: cmId(campaign, mod.id), campaign, moduleId: mod.id,
+    moduleName: mod.name, color: mod.color,
+    attachedBy: uidMe, attachedAt: Date.now(), updatedAt: Date.now(),
+    revealed: {scenes:{}, maps:{}},
+    revealedContent: {scenes:{}, maps:{}}
+  };
+}
+function findCampaignModule(moduleId){
+  return (S.campaignModules||[]).find(x => x.moduleId === moduleId) || null;
+}
+function sceneRevealed(cm, sceneId){ return !!(cm && cm.revealed && cm.revealed.scenes && cm.revealed.scenes[sceneId]); }
+function mapRevealedFor(cm, mapId){ return !!(cm && cm.revealed && cm.revealed.maps && cm.revealed.maps[mapId]); }
+/* The player-safe slice of a scene — no GM Notes, no sample dialogue, no NPC ids. */
+function playerSafeScene(sc){
+  return {id: sc.id, name: sc.name, narrative: sc.narrative, options: sc.options, enemies: sc.enemies, reward: sc.reward, mapId: sc.mapId};
+}
+function playerSafeMap(mp){
+  return {id: mp.id, name: mp.name, w: mp.w, h: mp.h, rooms: mp.rooms};
+}
+
+/* ---------- Seed module: Flat Earth Saga (book 1) --------------------------
+   A one-click import built from the module PDF. Transcribed structurally —
+   Acts > Scenes > the book's own sections (narrative, options, enemy
+   encounters, sample dialogue, GM notes, reward) — plus every NPC sheet and
+   a redrawn graph-paper map for each hand-sketched location. GM Notes and
+   sample dialogue are intentionally never exposed to players (see
+   playerSafeScene above); that's enforced the same way regardless of which
+   module a scene came from. */
+function seedFlatEarthModule(ownerId, ownerName){
+  const m = newModule(ownerId, ownerName);
+  m.name = "Flat Earth Saga — Module 1";
+  m.color = "green";
+  m.seedKey = "flat_earth_1";
+  m.summary = "The Crew is hired by the God of Physics to quietly destroy Flat Earth's server farm outside Kickerville, WA, before his movement spreads any further.";
+
+  // ---- maps --------------------------------------------------------------
+  const mapOffice = newMap("Dr. Fizicks' Office");
+  Object.assign(mapOffice, {w:14, h:12, rooms:[
+    {x:1,y:1,w:3,h:1,label:"Shelf"},
+    {x:9,y:1,w:3,h:1,label:"Shelf"},
+    {x:5,y:2,w:3,h:1.5,label:"Desk"},
+    {x:9,y:3,w:3,h:3,label:"Table",note:"6 chairs"},
+    {x:1,y:5,w:1.5,h:3,label:"Trophy"},
+    {x:1,y:8,w:4,h:1,label:"Trophy case"},
+    {x:9,y:9,w:2,h:1,label:"Desk"}
+  ], marks:[
+    {type:"label", x:1.2, y:0.8, text:"OFFICE"},
+    {type:"label", x:1.2, y:10.6, text:"RECEPTION"},
+    {type:"arrow", x1:6.5, y1:9, x2:6.5, y2:9.8}
+  ]});
+
+  const mapTown = newMap("Kickerville Town Square");
+  Object.assign(mapTown, {w:18, h:18, rooms:[
+    {x:1,y:2,w:3,h:14,label:"Sheriff Station"},
+    {x:14,y:2,w:3,h:7,label:"Restaurant"},
+    {x:14,y:10,w:3,h:6,label:"Bar"},
+    {x:5.5,y:3.5,w:3.5,h:4.5,label:"Planter"},
+    {x:9,y:3.5,w:3.5,h:4.5,label:"Planter"},
+    {x:5.5,y:8.5,w:3.5,h:4.5,label:"Planter"},
+    {x:9,y:8.5,w:3.5,h:4.5,label:"Planter"},
+    {x:8,y:7,w:2,h:2,label:"Gazebo"},
+    {x:5,y:15,w:8,h:2,label:"Forest Spirit's stand",note:"Jerky truck, cat"}
+  ], marks:[{type:"label", x:5.2, y:2.6, text:"TOWN SQUARE"}]});
+
+  const mapCompound = newMap("Flat Earth Compound (Exterior)");
+  Object.assign(mapCompound, {w:18, h:20, rooms:[
+    {x:4,y:5,w:10,h:11,label:"Compound Building"},
+    {x:8,y:1,w:2,h:2,label:"Front Gate",note:"Guard shack"},
+    {x:6,y:16,w:3,h:2,label:"Service Gate",note:"Warehouse behind"}
+  ], marks:[
+    {type:"label", x:11, y:18.6, text:"Back Area / Forest"},
+    {type:"arrow", x1:9, y1:3, x2:9, y2:5},
+    {type:"arrow", x1:7.5, y1:16, x2:7.5, y2:16.9}
+  ]});
+
+  const mapInterior = newMap("Compound Interior");
+  Object.assign(mapInterior, {w:16, h:20, rooms:[
+    {x:5,y:2,w:6,h:1.5,label:"Entrance / Reception"},
+    {x:1,y:4,w:2,h:12,label:"Seating"},
+    {x:13,y:4,w:2,h:12,label:"Seating"},
+    {x:4,y:4,w:8,h:11,label:"Presentation Room"},
+    {x:6,y:14,w:4,h:1.5,label:"Stage"},
+    {x:12,y:17,w:3,h:1.5,label:"Stairs down"}
+  ]});
+
+  const mapServer = newMap("The Server Farm");
+  Object.assign(mapServer, {w:16, h:20, rooms:[
+    {x:2,y:2,w:4,h:2,label:"Server racks",note:"“Stays up”"},
+    {x:1,y:5,w:14,h:13,label:"White void"},
+    {x:9,y:15,w:5,h:3,label:"Server room",note:"Flat Earth & Greg Rogers"}
+  ]});
+
+  m.maps = [mapOffice, mapTown, mapCompound, mapInterior, mapServer];
+
+  // ---- NPCs ----------------------------------------------------------------
+  function mkNpc(o){
+    const n = newNpc("", "");
+    delete n.id; // the real id is assigned when copied into a campaign
+    return Object.assign(n, {id: uid("tnpc_")}, o);
+  }
+  const securityRegular = mkNpc({
+    name:"Private Security — Regular", type:"trueborn", role:"minion",
+    combat:{defense:15, soak:3, melee:2, ranged:4, initiative:4}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"Bullet Proof Vest", desc:"Gear — roll soak on lethal damage, +2 modifier."},
+      {name:"Submachine Gun", desc:"Gear — lethal damage, 1 level per hit."},
+      {name:"Handgun", desc:"Gear — lethal damage, 1 level per hit."},
+      {name:"Baton", desc:"Gear — +3 damage."},
+      {name:"Bluetooth Communicator", desc:"Gear — lets this NPC communicate with other NPCs."}
+    ],
+    notes:"Attributes: Str 14 (+2), Dex 14 (+2), Con 12 (+1), Wis 10 (+0), Int 10 (+0), Cha 10 (+0)\n" +
+      "Saves: Will +2, Reflex +4, Fortitude +3\n" +
+      "Skills: Subterfuge +3, Intimidate +3, Computer +3, Survival +3, Notice +5, Sense Motive +4, Stealth +4\n\n" +
+      "Regular humans armed with handguns, shotguns, tear gas, and bullet-proof armor."
+  });
+  const securitySniper = mkNpc({
+    name:"Private Security — Sniper", type:"trueborn", role:"minion",
+    combat:{defense:15, soak:3, melee:2, ranged:5, initiative:4}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"Bullet Proof Vest", desc:"Gear — roll soak on lethal damage, +2 modifier."},
+      {name:"Sniper Rifle", desc:"Gear — lethal damage, 2 levels per hit, +2 to ranged attack."},
+      {name:"Handgun", desc:"Gear — lethal damage, 1 level per hit."},
+      {name:"Baton", desc:"Gear — +3 damage."},
+      {name:"Bluetooth Communicator", desc:"Gear — lets this NPC communicate with other NPCs."}
+    ],
+    notes:"Attributes: Str 14 (+2), Dex 16 (+3), Con 12 (+1), Wis 10 (+0), Int 10 (+0), Cha 10 (+0)\n" +
+      "Saves: Will +2, Reflex +5, Fortitude +3\n" +
+      "Skills: Subterfuge +3, Intimidate +3, Computer +3, Survival +3, Notice +6, Sense Motive +4, Stealth +6\n\n" +
+      "On the compound roof. +2 to all attacks — the area around the compound follows flat-earth physics, so there's no Coriolis effect — and has a thermal scope."
+  });
+  const sheriffDeputies = mkNpc({
+    name:"Sheriff Deputies", type:"trueborn", role:"minion",
+    combat:{defense:10, soak:1, melee:1, ranged:1, initiative:1}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"Bullet Proof Vest", desc:"Gear — roll soak on lethal damage, +2 modifier."},
+      {name:"Handgun", desc:"Gear — lethal damage, 1 level per hit."},
+      {name:"Baton", desc:"Gear — +3 damage."},
+      {name:"Bluetooth Communicator", desc:"Gear — lets this NPC communicate with other NPCs."}
+    ],
+    notes:"Attributes: Str 10 (+0), Dex 12 (+1), Con 12 (+1), Wis 7 (-2), Int 8 (-1), Cha 5 (-3)\n" +
+      "Saves: Will -2, Reflex +1, Fortitude +3\n" +
+      "Skills: Intimidate +3, Survival +3, Notice +4\n\n" +
+      "3–6 of them depending on party size. On Flat Earth's payroll — corrupt, but still law enforcement; attacking them risks attention from other agencies."
+  });
+  const sheriff = mkNpc({
+    name:"Sheriff", type:"trueborn", role:"minion",
+    combat:{defense:15, soak:3, melee:1, ranged:3, initiative:1}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"Bullet Proof Vest", desc:"Gear — roll soak on lethal damage, +2 modifier."},
+      {name:"Handgun", desc:"Gear — lethal damage, 1 level per hit."},
+      {name:"Baton", desc:"Gear — +3 damage."},
+      {name:"Bluetooth Communicator", desc:"Gear — lets this NPC communicate with other NPCs."}
+    ],
+    notes:"Attributes: Str 8 (-1), Dex 13 (+1), Con 8 (-1), Wis 10 (+0), Int 10 (+0), Cha 16 (+3)\n" +
+      "Saves: Will +2, Reflex -1, Fortitude +0\n" +
+      "Skills: Subterfuge +5, Intimidate +6, Survival +3, Notice +5, Sense Motive +5\n\n" +
+      "Sample dialogue: “Hey there sports. Why don'tcha get the fuck out of town? We know who you are, and we can make life very difficult. Now, I'm not aiming for it, yet. But yeah, this will get ugly if I don't see you on the other side of the county line.”"
+  });
+  const internetTroll = mkNpc({
+    name:"Internet Troll", type:"mindborn", mindbornKind:"demon", role:"minion",
+    combat:{defense:15, soak:3, melee:4, ranged:4, initiative:4}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"Feed the Troll", desc:"Standard — lobs an insult to anger a player (Will save DC 15). Each success gives the Troll +1 to all combat stats, stacking; the player gets a comeback chance by beating a Will save at DC 15 + the Troll's Charisma modifier."},
+      {name:"Pure Nonsense", desc:"Standard — a non-sequitur meant purely to cause confusion. Will save DC 15 or -1 to all combat rolls, stacking; comeback chance as above."},
+      {name:"You Can't Ignore Me", desc:"Ongoing — its insults reach the target no matter what, which makes the Troll visible even if it was hiding."},
+      {name:"Weakness — Comeback", desc:"A successful comeback strips all its power for a full round and reverts it to its weakened stats: Melee -2, Ranged -2, Initiative -2, Defense 5, Soak +0."}
+    ],
+    notes:"Attributes: Str 18/8 (+4/-1), Dex 14/4 (+2/-3), Con 16/6 (+3/-2), Wis 10 (+0), Int 12 (+1), Cha 7 (-2)\n" +
+      "Saves: Will +2, Reflex +4/-4, Fortitude +3/-3\n" +
+      "Skills: Subterfuge +5, Intimidate +5/-1, Computer +8, Notice +5, Sense Motive +5, Stealth +5\n" +
+      "Equipment: Keyboard (+1 to damage)\n\n" +
+      "Looks huge and can be devastating — until it's hit with a comeback insult, after which it's weak for a round."
+  });
+  const skinwalker = mkNpc({
+    name:"Skinwalker — Ti-Woon Antilles", type:"halfborn", subtype:"Skinwalker", role:"miniboss",
+    combat:{defense:15, soak:6, melee:6, ranged:2, initiative:4}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"Skin Change", desc:"Free — changes shape, altering its stats. 15 points to distribute into physical attributes, combat stats, and skills. Physical only — it can't take on others' powers this way. Can become other humanoids or animals."},
+      {name:"Aura of Fear", desc:"Free — a 10-ft aura. Anyone inside makes a Will save (DC 15); every fail gives the Skinwalker +1 Strength for its turn, and the failed creature takes -1 to Will-based stats, skills, and abilities."},
+      {name:"In the Blood", desc:"Standard — ingesting a drop of blood from a player or NPC lets it use that creature's ability the next round. It must Skin Change into them first."},
+      {name:"Weakness — resisted Aura of Fear", desc:"Resisting Aura of Fear grants an additional Will save at DC 20. On success the Skinwalker reverts to its original form and takes -1 to all combat stats until its next turn."}
+    ],
+    notes:"Attributes: Str 10 (+0), Dex 10 (+0), Con 16 (+3), Wis 15 (+2), Int 16 (+2), Cha 16 (+2)\n" +
+      "Saves: Will +4, Reflex +4, Fortitude +3\n" +
+      "Skills: Subterfuge +10, Intimidate +5, Notice +5, Sense Motive +5, Stealth +5\n" +
+      "Equipment: Ceremonial Knife (bashing, +4 modifier — unless the player rolls 16+, in which case it deals lethal damage)\n\n" +
+      "Patrols upstairs impersonating a party member to isolate and attack them. The first mini-boss — keep the players guessing who's real as long as possible before springing the trap."
+  });
+  const gregRogers = mkNpc({
+    name:"Neverborn — Greg Rogers", type:"neverborn", neverbornStyle:"gravity", role:"contractor",
+    combat:{defense:17, soak:5, melee:5, ranged:5, initiative:6}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"Djem So", desc:"Triggered · Proficiency 1 · Personal/Ranged — any ranged attack against him is automatically redirected back at its source; the attacker gets a reflex save (DC 15) to take no damage."},
+      {name:"Shien", desc:"Standard · Proficiency 1 · Melee range — a physical attack with extra mass behind it, +5 damage modifier."},
+      {name:"Mind Trick", desc:"Standard · Proficiency 2 · Perception range — the target must answer “what ya thinking about?” or is effectively incapacitated until a Will save (DC 17); all combat stats take -3 until then."},
+      {name:"The World Between", desc:"Move · Proficiency 3 · Personal — opens a portal to folded space; teleport any distance within eyesight. A grappled foe can be left inside, deposited anywhere within eyesight next turn — there is no way to escape."}
+    ],
+    notes:"Attributes: Str 16 (+3), Dex 16 (+3), Con 16 (+3), Wis 10 (+0), Int 10 (+0), Cha 14 (+2)\n" +
+      "Saves: Will +2, Reflex +4, Fortitude +4\n" +
+      "Skills: Acrobatics +6, Sleight of Hand +6, Charm +6, Larceny +6, Athletics (Swim) +6, Athletics (Climb) +5, Survival +5, Notice +5, Stealth +5\n" +
+      "Equipment: Body Armor (+4 soak on lethal), Long Sword (bashing, +5 modifier — unless the player rolls 16+, in which case it deals lethal damage)\n\n" +
+      "A mercenary, not a true believer. Can be bribed or intimidated off the job; 3 levels of bashing damage or 1 level of lethal damage also makes him bow out.\n" +
+      "Sample dialogue: “I'm just here to pay rent. I don't like this guy.”"
+  });
+  const flatEarth = mkNpc({
+    name:"Flat Earth", type:"mindborn", mindbornKind:"god", role:"boss",
+    combat:{defense:15, soak:3, melee:0, ranged:5, initiative:4}, wounds:{current:0,max:14},
+    abilities:[
+      {name:"Blasting Upwards", desc:"Standard · Ranged — sends a portion of the ground flying upward (“how gravity works,” per flat-earthers). +5 worth of bashing or stun damage, his choice."},
+      {name:"Ice Wall", desc:"Standard · Personal — summons part of an ice wall as a defensive measure; +5 Defense for 1 round."},
+      {name:"Pac-Man Rules", desc:"Move · Personal — runs to the edge of a room and emerges from the opposite edge, like Pac-Man."},
+      {name:"Level", desc:"Equipment — a basic construction tool. A ranged attack getting the target to look at it forces a Fortitude save (DC 15) or every direction becomes reversed."}
+    ],
+    notes:"Attributes: Str 10 (+0), Dex 10 (+0), Con 10 (+0), Wis 10 (+0), Int 8 (-1), Cha 18 (+4)\n" +
+      "Saves: Will +0, Reflex +4, Fortitude +3\n" +
+      "Skills: Subterfuge +10, Charm +10, Sense Motive +5, Stealth +10\n" +
+      "Equipment: Body Armor (+4 soak on lethal)\n\n" +
+      "Boss battle, fought alongside Greg Rogers (his Child of Gravity). Entirely in self-denial, stays-in-his-mom's-basement crazy, a huge streak of narcissism — can be charmed into believing the party is on his side.\n" +
+      "Sample dialogue: “You fucking Globetards think you can stop me? I'm here because the Bible supports a flat earth geocentric model, not a globe earth heliocentric model. There is nowhere in the Bible that says the earth is spinning around real fast nor does it say the earth revolves around the sun, in fact it's just the opposite.”"
+  });
+  const fizicks = mkNpc({
+    name:"Algernop Fizicks", type:"mindborn", mindbornKind:"god", role:"ally",
+    combat:{defense:20, soak:3, melee:0, ranged:5, initiative:6}, wounds:{current:0,max:10},
+    abilities:[
+      {name:"First Law", desc:"Standard · Hard Canon · Ranged — a blast that moves the target until they hit something solid or another power stops them. Velocity scales with how much the ranged attack succeeds by: 0-5 → 5 mph (+2 dmg mod); 6-10 → 10 mph (+5 dmg mod); 11-15+ → 15 mph (+10 dmg mod); crit → terminal velocity (~30 mph), 1 level of lethal damage."},
+      {name:"Second Law", desc:"Standard · Hard Canon · Ranged — a ranged attack that, on a hit, leaves the target completely immovable for 1 round."},
+      {name:"Third Law", desc:"Triggered · Soft Canon · Personal — damage done to Fizicks reflects back on its source if he beats an unmodified DC 10 roll."}
+    ],
+    notes:"Attributes: Str 10 (+0), Dex 10 (+0), Con 10 (+0), Wis 14 (+2), Int 18 (+4), Cha 12 (+1)\n" +
+      "Saves: Will +5, Reflex +2, Fortitude +2\n" +
+      "Skills: Subterfuge +10, Charm +10, Sense Motive +5, Sleight of Hand +6\n\n" +
+      "Quest giver. Hires the Crew at JPL to quietly destroy Flat Earth's server farm without being connected to it himself.\n" +
+      "Sample dialogue: “I'm desperate, and so you all are here. Efforts to provide evidence, theorems, and facts result in no positive change. This upstart debunked theory has raised my cortisol levels for the final time I am permitting. I need your help to carry this out. Eradicate his… 'meme' farm anyway you can. Do not connect me directly to the incident.”"
+  });
+  const forestSpirit = mkNpc({
+    name:"Forest Spirit", type:"mindborn", mindbornKind:"spirit", role:"ally",
+    combat:{defense:20, soak:7, melee:5, ranged:5, initiative:8}, wounds:{current:0,max:12},
+    abilities:[
+      {name:"Tooth & Claw", desc:"Free · Hard Canon · Melee — turns all of its melee damage into lethal damage."},
+      {name:"Call of the Wild", desc:"Standard · Hard Canon · Perception — summons local wildlife to rush the Player Characters in a berserker fury."}
+    ],
+    notes:"Attributes: Str 16 (+3), Dex 17 (+3), Con 20 (+5), Wis 14 (+2), Int 10 (+0), Cha 10 (+0)\n" +
+      "Saves: Will +5, Reflex +5, Fortitude +5\n" +
+      "Skills: Intimidate +5, Survival +10, Animal Ken +10, Notice +6, Stealth +6\n\n" +
+      "Hangs around Kickerville, appearing as a redneck selling jerky out of the back of a truck — pointed ears and mossy arm hair give it away, plus the cat. Trading the restaurant owner's missing cat (Franklin) back to him buys information on the compound's location and exterior.\n" +
+      "Sample dialogue: “Oh, tha fuck y'al iggits want? It's bad enough I got a myth running a cult on the edge of my home, some jumped up void assholes have to come talk to me. Buy some jerky, or fuck off.”"
+  });
+  m.npcs = [securityRegular, securitySniper, sheriffDeputies, sheriff, internetTroll, skinwalker, gregRogers, flatEarth, fizicks, forestSpirit];
+
+  // ---- acts & scenes ---------------------------------------------------
+  const a1 = newAct("Act I — The Assignment");
+  const s1a = newScene("Scene 1 — Meet @ JPL");
+  Object.assign(s1a, {
+    narrative:"The Crew of Neverborn are brought to the Jet Propulsion Lab in Pasadena to meet with the God of Physics (Algernop Fizicks), who offers them a job to destroy the server farm on Flat Earth's compound that is spreading and supporting the movement.\n\n" +
+      "Most of the Neverborn should know each other, but a few should be newcomers with little history with the wider group (depending on the number of players). An escort will be there to take them to Dr. Fizicks' office. The group will be handed a dossier containing the following info:",
+    options:["Flat Earth's facility is outside Kickerville, WA","A dedicated security force is there, armed with assault weapons","There is most likely a Neverborn on retainer there","Flat Earth is extra paranoid now and is on the lookout for people coming for him"],
+    dialogue:[
+      {who:"Algernop Fizicks", text:"I'm desperate, and so you all are here. Efforts to provide evidence, theorems, and facts result in no positive change. This upstart debunked theory has raised my cortisol levels for the final time I am permitting. I need your help to carry this out."},
+      {who:"Algernop Fizicks", text:"Eradicate his… 'meme' farm anyway you can. Do not connect me directly to the incident."}
+    ],
+    mapId: mapOffice.id, npcIds:[fizicks.id]
+  });
+  const s1b = newScene("Scene 2 — Get 2 Kickerville");
+  Object.assign(s1b, {
+    narrative:"The Crew will need to secure a way into Kickerville, with each option offering advantages and disadvantages. All of the cops in Kickerville are on Flat Earth's payroll, looking for suspicious figures.",
+    options:[
+      "Drive — Flat Earth will not get alerted to their presence, so they'll be able to walk through town without being tailed or attacked. However, all of the cops in the area are on his payroll and will be pulling over anyone suspicious. This will also take in world time.",
+      "Take the train — The crew will be identified on the platforms by Flat Earth's agents. The party will have some time before the cops arrive.",
+      "Fly — Flat Earth's people will have flagged them as soon as the tickets are bought and will be targeting them at the airport. They'll also have to figure out how to smuggle weapons."
+    ]
+  });
+  a1.scenes = [s1a, s1b];
+
+  const a2 = newAct("Act II — Investigation");
+  const s2a = newScene("Scene 1 — Find the Server Farm");
+  Object.assign(s2a, {
+    narrative:"On entering Kickerville, the Crew will have the following options to track down Flat Earth's server farm.",
+    options:[
+      "Local Restaurant — A restaurant in the area has a high standing order count going out to a remote location. The Crew can obtain this information however they see fit — it's kept in the restaurant's computer, known to the delivery guy, and the kitchen is prepping an order to go out there soon.",
+      "Local Bar — An off-duty private security guy is drinking there and can tell you everything about the security protocols; the bartender is familiar with several employees and can give an approximate location.",
+      "Sheriff's Office — The local cops are on the payroll and looking to harass you, but that also means they have the location and can give up additional information about the private security, plus a pass through the main gate.",
+      "Forest Spirit — There's a Forest Spirit hanging around town that can be tracked down and will give up information about the location and exterior of the compound. They'll appear as a redneck selling jerky out the back of a truck, but can be identified if the players notice his pointed ears and mossy arm hair. They have a cat with them as well."
+    ],
+    enemies:["Sheriff ×1","Deputies ×3–6 (scale to party size)"],
+    dialogue:[
+      {who:"Forest Spirit", text:"Oh, tha fuck y'al iggits want? It's bad enough I got a myth running a cult on the edge of my home, some jumped up void assholes have to come talk to me. Buy some jerky, or fuck off."},
+      {who:"Sheriff", text:"Hey there sports. Why don'tcha get the fuck out of town? We know who you are, and we can make life very difficult. Now, I'm not aiming for it, yet. But yeah, this will get ugly if I don't see you on the other side of the county line."},
+      {who:"Private Security", text:"Eat dicks libtards. I'm not talking."}
+    ],
+    gmNotes:[
+      "These are regular humans armed with handguns, shotguns, tear gas, and bullet-proof armor. While corrupt, they're still representatives of the law — attacking them can bring attention from other law enforcement agencies.",
+      "If the players arrive by flying, the Sheriff's office immediately picks them up, causing a confrontation with the police.",
+      "If the players arrived via train, the Sheriffs arrest them after visiting one location.",
+      "If the players arrived via car, the Sheriffs only mess with them if they make a scene.",
+      "If the players go to the restaurant, they'll find out the owner's cat is missing. If they can locate the cat (who's with the Forest Spirit), see Reward."
+    ],
+    reward:"Become the delivery driver to Flat Earth's compound for dinner, and receive additional goodwill — if the players recover the restaurant owner's missing cat, Franklin, from the Forest Spirit.",
+    mapId: mapTown.id, npcIds:[sheriff.id, sheriffDeputies.id, securityRegular.id, forestSpirit.id]
+  });
+  a2.scenes = [s2a];
+
+  const a3 = newAct("Act III — Infiltrate");
+  const s3a = newScene("Scene 1 — Infiltrate the Base");
+  Object.assign(s3a, {
+    narrative:"The players will need to enter the compound and can do so in multiple ways.",
+    options:[
+      "Front Gate — They'll need to clear a security check point with multiple armed guards, then get past a large manicured lawn to reach the front door. The guard at the gate is extremely officious and can't be talked around — without proper clearance he'll raise the alarm.",
+      "Back Area — The fence of the compound butts up against the forest and is relatively dark. Though once past the fence, there are cameras pointed everywhere.",
+      "Service Gate — To one side is a service gate where large equipment is dropped off. They have to go through a warehouse to reach a security door that lets them into the compound. The guards here are more lax than the front, but if the crew shows up in anything other than a large van they'll be suspicious. It's possible to take them out without triggering an alarm."
+    ],
+    gmNotes:[
+      "The compound has snipers on the roof, and because the area immediately around the compound is Flat Earth's domain, the laws of physics follow as if there really were a flat earth — snipers get an extra +2 to all attacks (no Coriolis effect). The compound also has generator backups, so cutting the power only buys a 30-second window of darkness. Private Security has flashlights and the snipers have thermal scopes.",
+      "Triggering an alarm brings all Private Security to the location where it was triggered and locks down all security doors — players will have to force their way through.",
+      "There can be as many Private Security members as the GM wants. A general guideline is (number of party members) + 5, with at least 1 sniper."
+    ],
+    mapId: mapCompound.id, npcIds:[securityRegular.id, securitySniper.id]
+  });
+  const s3b = newScene("Scene 2 — Seek and Destroy");
+  Object.assign(s3b, {
+    narrative:"Once inside, the Players will need to find the Server Farm. The following are key ways that they can do this.",
+    options:[
+      "Follow the energy cables to their end, where the server farm is.",
+      "Kidnap a Private Security member and bribe or intimidate them.",
+      "Locate the Security Room and take the information.",
+      "Grab an Internet Troll and make it tell them."
+    ],
+    enemies:["The Skinwalker (mini-boss)","Internet Trolls"],
+    gmNotes:[
+      "The Skinwalker will be patrolling upstairs and trying to impersonate one of the Party members in order to isolate and attack them. They can come from any source and can be pretending to be anyone. They are the first mini-boss — the key is to keep the players in the dark as long as possible before springing the trap.",
+      "Internet Trolls will also be there, and they look huge and can be devastating. However, if you hurt one with an insult, it becomes weak and is easily killed — though they can also insult and weaken the crew."
+    ],
+    mapId: mapInterior.id, npcIds:[skinwalker.id, internetTroll.id]
+  });
+  const s3c = newScene("Scene 3 — Flat Earth");
+  Object.assign(s3c, {
+    narrative:"The players will be stopped right before the server farms by Flat Earth and a Child of Gravity. Consider this the boss battle of the game.",
+    enemies:["Flat Earth (Boss)","Greg Rogers — Neverborn, Gravity Sibling (Contractor)"],
+    gmNotes:[
+      "The Child of Gravity is straight up a mercenary and can be bought off. They won't turn on Flat Earth, but they'll bow out if convinced. Conversely, if the players cause 3 levels of bashing damage or one level of lethal damage to the Child of Gravity, they'll leave.",
+      "Flat Earth is entirely in self-denial, stays-in-his-mom's-basement crazy. Owner of a huge streak of narcissism, he can be charmed into thinking the party is on his side."
+    ],
+    dialogue:[
+      {who:"Flat Earth", text:"You fucking Globetards think you can stop me? I'm here because the Bible supports a flat earth geocentric model, not a globe earth heliocentric model. There is nowhere in the Bible that says the earth is spinning around real fast nor does it say the earth revolves around the sun, in fact it's just the opposite."},
+      {who:"Greg Rogers", text:"I'm just here to pay rent. I don't like this guy."}
+    ],
+    mapId: mapServer.id, npcIds:[flatEarth.id, gregRogers.id]
+  });
+  const s3d = newScene("Scene 4 — Escape");
+  Object.assign(s3d, {
+    narrative:"After you destroy Flat Earth and the Server Farms, the natural laws of physics start to reassert themselves. The Players need to run out of the compound.\n\n" +
+      "They should have to clear 3 different reflex saves. Set those moments to something that challenges the players based on their abilities, but isn't impossible."
+  });
+  a3.scenes = [s3a, s3b, s3c, s3d];
+
+  const a4 = newAct("Act IV — This Is the End");
+  const s4a = newScene("Scene 1 — Wrap It Up");
+  Object.assign(s4a, {
+    narrative:"Let the players RP through their characters, with one contacting Physics to let them know the job is done. Depending on how much collateral they caused, they can go back into town or have to sneak back home. This ends the adventure."
+  });
+  a4.scenes = [s4a];
+
+  m.acts = [a1, a2, a3, a4];
+  return m;
+}
+
 /* "Type · Subtype" — the single label used everywhere an NPC is shown. */
 function npcTypeLabel(n){
   const t = NPC_TYPES[n.type] || NPC_TYPES.trueborn;
@@ -1285,6 +1745,51 @@ function tierEffect(t){
 /* =========================================================================
    Render core
    ========================================================================= */
+/* ---------- graph-paper maps ------------------------------------------------
+   Data-driven: a map is just a grid size plus a list of labeled rectangles
+   in grid units. Rendered as inline SVG so it reflows and stays legible (and
+   correctly themed) at any size, instead of a baked-in image. */
+function graphMapSvg(mp, opts){
+  opts = opts || {};
+  const unit = opts.unit || 22;
+  const w = Math.max(1, num(mp.w, 16)), h = Math.max(1, num(mp.h, 20));
+  const W = w * unit, H = h * unit;
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block;max-width:' + (w*30) + 'px" role="img" aria-label="Map: ' + esc(mp.name||"") + '">';
+  svg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="var(--paper-2)" stroke="var(--ink)" stroke-width="2"/>';
+  // fine grid
+  for(let gx = 0; gx <= w; gx++){
+    const strong = gx % 5 === 0;
+    svg += '<line x1="' + (gx*unit) + '" y1="0" x2="' + (gx*unit) + '" y2="' + H + '" stroke="var(--rule' + (strong?'-strong':'') + ')" stroke-width="' + (strong?1:0.6) + '"/>';
+  }
+  for(let gy = 0; gy <= h; gy++){
+    const strong = gy % 5 === 0;
+    svg += '<line x1="0" y1="' + (gy*unit) + '" x2="' + W + '" y2="' + (gy*unit) + '" stroke="var(--rule' + (strong?'-strong':'') + ')" stroke-width="' + (strong?1:0.6) + '"/>';
+  }
+  // rooms
+  (mp.rooms||[]).forEach(r => {
+    const x = num(r.x,0)*unit, y = num(r.y,0)*unit, rw = Math.max(1,num(r.w,1))*unit, rh = Math.max(1,num(r.h,1))*unit;
+    svg += '<rect x="' + x + '" y="' + y + '" width="' + rw + '" height="' + rh + '" fill="var(--paper-3)" fill-opacity="0.55" stroke="var(--ink)" stroke-width="1.6" rx="2"/>';
+    if(r.label){
+      svg += '<text x="' + (x+6) + '" y="' + (y+16) + '" font-family="Kalam,cursive" font-size="12.5" fill="var(--ink)">' + esc(r.label) + '</text>';
+    }
+    if(r.note){
+      svg += '<text x="' + (x+6) + '" y="' + (y+rh-7) + '" font-family="Kalam,cursive" font-size="10.5" fill="var(--ink-2)">' + esc(r.note) + '</text>';
+    }
+  });
+  // door/arrow markers, free-form lines the data can specify
+  (mp.marks||[]).forEach(mk => {
+    if(mk.type === "arrow"){
+      const x1=num(mk.x1,0)*unit, y1=num(mk.y1,0)*unit, x2=num(mk.x2,0)*unit, y2=num(mk.y2,0)*unit;
+      svg += '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="var(--red)" stroke-width="2" marker-end="url(#arrowhead)"/>';
+    } else if(mk.type === "label"){
+      svg += '<text x="' + (num(mk.x,0)*unit) + '" y="' + (num(mk.y,0)*unit) + '" font-family="Kalam,cursive" font-weight="700" font-size="12.5" fill="var(--red-ink)">' + esc(mk.text||"") + '</text>';
+    }
+  });
+  svg += '<defs><marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--red)"/></marker></defs>';
+  svg += '</svg>';
+  return '<div class="mapwrap"><div class="maptitle hand">' + esc(mp.name||"Map") + '</div>' + svg + '</div>';
+}
+
 const APP = document.getElementById("app");
 
 function toast(msg){
@@ -1337,13 +1842,14 @@ function viewRoot(){
     case "approvals": body = viewApprovals(); break;
     case "campaign":  body = viewCampaign(); break;
     case "npcs":      body = viewNpcs(); break;
+    case "modules":   body = viewModules(); break;
     case "reference": body = viewReference(); break;
     default: body = viewDashboard();
   }
   return '<div class="shell">' + viewSpine() + '<div class="main">' + viewMobNav() + viewStatbar() +
          '<div class="page">' + body + '</div>' +
          (S.toast ? '<div class="toast">' + esc(S.toast) + '</div>' : '') +
-         '</div></div>' + (S.modal ? viewModal() : '') + (S.npcModal ? viewNpcModal() : '');
+         '</div></div>' + (S.modal ? viewModal() : '') + (S.npcModal ? viewNpcModal() : '') + (S.modModal ? viewModModal() : '') + (S.sceneModal ? viewSceneModal() : '');
 }
 
 /* ---------- navigation --------------------------------------------------- */
@@ -1355,6 +1861,7 @@ function navItems(){
   ];
   if(isGM()) items.push({g:"Crew", v:"approvals", i:"✎", n:"Approvals", cnt:pend});
   if(isGM()) items.push({g:"Crew", v:"npcs", i:"☠", n:"NPCs", cnt:(S.npcs||[]).length || null});
+  items.push({g:"Crew", v:"modules", i:"▥", n:"Modules", cnt:(S.campaignModules||[]).length || null});
   if(isGM()) items.push({g:"Crew", v:"campaign", i:"⚙", n:"Settings"});
   if(c){
     items.push({g:"Character", v:"overview", i:"☰", n:"Overview"});
@@ -1603,6 +2110,12 @@ function viewDashboard(){
     }
   }
 
+  const cms = S.campaignModules || [];
+  if(cms.length){
+    h += '<h2 class="sec">Adventures</h2><div class="row" style="gap:8px;margin-bottom:14px">' +
+      cms.map(cm => '<button class="modbadge" style="background:' + moduleColor(cm.color).hex + ';border:0;cursor:pointer;font-size:12px;padding:5px 12px 5px 9px" data-act="gomodule" data-id="' + cm.moduleId + '">' +
+        '<span class="moddot" style="background:#fff;border-color:rgba(255,255,255,.6)"></span>' + esc(cm.moduleName) + '</button>').join("") + '</div>';
+  }
   h += '<h2 class="sec">Crew</h2><div class="grid g3">';
   const list = mine.concat(others);
   if(!list.length){
@@ -2507,7 +3020,7 @@ function npcCard(n){
   const w = n.wounds || {current:0,max:10};
   const hurt = w.max > 0 ? clamp(Math.round(w.current / w.max * 100), 0, 100) : 0;
   return '<div class="npccard" data-act="npc-edit" data-id="' + n.id + '">' +
-    '<div class="row" style="margin-bottom:4px"><h4 style="flex:1">' + esc(n.name || "Unnamed NPC") + '</h4>' +
+    '<div class="row" style="margin-bottom:4px"><h4 style="flex:1">' + (n.moduleColor ? '<span class="moddot" title="From a module" style="background:' + moduleColor(n.moduleColor).hex + ';margin-right:6px"></span>' : '') + esc(n.name || "Unnamed NPC") + '</h4>' +
     (role ? '<span class="pill role-' + role.k + '">' + esc(role.n) + '</span>' : '') + '</div>' +
     '<div class="styl" style="font-family:var(--f-hand);font-size:13.5px;color:var(--ink-2);margin-bottom:6px">' + esc(npcTypeLabel(n)) +
     (org ? ' · ' + esc(org) : '') + '</div>' +
@@ -2586,6 +3099,241 @@ function viewNpcModal(){
     (S.npcs.find(x => x.id === n.id) ? '<button class="btn danger sm" data-act="npc-delete" style="margin-right:auto">Delete NPC</button>' : '') +
     '<button class="btn primary sm" data-act="npc-save">Save</button>' +
     '</div></div></div>';
+}
+
+/* ---------- Modules ---------------------------------------------------------
+   GM: a library of reusable adventure modules, attachable to any campaign
+   they run, with per-scene / per-map "reveal to players" switches.
+   Players: only what the GM has revealed — and even then only the
+   player-safe slice (no GM Notes, no sample dialogue, no NPC sheets). */
+function modBadge(colorKey, text){
+  const c = moduleColor(colorKey);
+  return '<span class="modbadge" style="background:' + c.hex + '"><span class="moddot" style="background:#fff;border-color:rgba(255,255,255,.6)"></span>' + esc(text) + '</span>';
+}
+function modLines(arr){ return (arr||[]).filter(x => String(x).trim()); }
+function olList(arr){ const a = modLines(arr); return a.length ? '<ol style="margin:0;padding-left:20px">' + a.map(x => '<li>' + esc(x) + '</li>').join("") + '</ol>' : ''; }
+function ulList(arr){ const a = modLines(arr); return a.length ? '<ul style="margin:0;padding-left:20px">' + a.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul>' : ''; }
+function paras(text){ return String(text||"").split(/\n\s*\n/).filter(x => x.trim()).map(x => '<p style="margin:0 0 7px">' + esc(x).replace(/\n/g,"<br>") + '</p>').join(""); }
+function secBlock(label, inner){ return inner ? '<div class="sechead">' + esc(label) + '</div>' + inner : ''; }
+
+/* Rebuild the player-visible copy of a module for one campaign. */
+function syncCampaignModule(m, cm){
+  cm.moduleName = m.name; cm.color = m.color;
+  cm.acts = (m.acts||[]).map(a => ({id:a.id, name:a.name, sceneIds:(a.scenes||[]).map(s => s.id)}));
+  cm.revealed = cm.revealed || {scenes:{}, maps:{}};
+  const sc = {}, mp = {};
+  Object.keys(cm.revealed.scenes||{}).forEach(id => {
+    const f = cm.revealed.scenes[id] ? findScene(m, id) : null;
+    if(f) sc[id] = playerSafeScene(f.scene); else delete cm.revealed.scenes[id];
+  });
+  Object.keys(cm.revealed.maps||{}).forEach(id => {
+    const f = cm.revealed.maps[id] ? findMap(m, id) : null;
+    if(f) mp[id] = playerSafeMap(f); else delete cm.revealed.maps[id];
+  });
+  cm.revealedContent = {scenes:sc, maps:mp};
+  cm.updatedAt = Date.now();
+  return cm;
+}
+
+function viewModules(){
+  if(!isGM()) return viewModulesPlayer();
+  const open = S.openModuleId ? S.modules.find(x => x.id === S.openModuleId) : null;
+  if(open) return viewModuleDetail(open);
+
+  let h = '<div class="row"><div class="banner" style="margin:0"><span>Modules</span></div><span class="right row">' +
+    '<button class="btn primary sm" data-act="mod-new">New module</button></span></div>' +
+    '<p class="tiny muted" style="margin:-4px 0 14px">Your module library belongs to your account, so you can attach the same adventure to any campaign you run. ' +
+    'Players only ever see the scenes and maps you reveal to them — never GM Notes, sample dialogue, or NPC sheets.</p>';
+
+  const haveSeed = S.modules.some(x => x.seedKey === "flat_earth_1");
+  if(!haveSeed){
+    h += '<div class="card tape" style="margin-bottom:14px"><h2 class="sec">Ready-made: Flat Earth Saga</h2>' +
+      '<p class="tiny muted" style="margin:0 0 9px">Module 1, from the book — 4 acts, 8 scenes, 10 NPC sheets, and 5 graph-paper maps. Importing adds a private copy to your library.</p>' +
+      '<button class="btn primary sm" data-act="mod-seed">Add Flat Earth Saga to my library</button></div>';
+  }
+  if(!S.modules.length){
+    return h + '<div class="empty"><p>No modules in your library yet.</p></div>';
+  }
+  h += '<div class="grid g2">';
+  S.modules.forEach(m => {
+    const c = moduleColor(m.color);
+    const cm = findCampaignModule(m.id);
+    const nScenes = allScenes(m).length;
+    h += '<div class="modcard" style="border-left-color:' + c.hex + '">' +
+      '<div class="row" style="margin-bottom:4px"><h4 style="flex:1">' + esc(m.name) + '</h4>' + modBadge(m.color, c.n) + '</div>' +
+      '<p class="tiny muted" style="margin:0 0 8px">' + esc(m.summary || "No summary yet.") + '</p>' +
+      '<div class="row" style="gap:5px;margin-bottom:9px">' +
+        '<span class="chip">' + (m.acts||[]).length + ' acts</span><span class="chip">' + nScenes + ' scenes</span>' +
+        '<span class="chip">' + (m.npcs||[]).length + ' NPCs</span><span class="chip">' + (m.maps||[]).length + ' maps</span>' +
+        (cm ? '<span class="chip ok">Attached here</span>' : '') + '</div>' +
+      '<div class="row">' +
+        '<button class="btn primary sm" data-act="mod-open" data-id="' + m.id + '">Open</button>' +
+        (cm ? '<button class="btn ghost sm" data-act="mod-detach" data-id="' + m.id + '">Detach</button>'
+            : '<button class="btn sm" data-act="mod-attach" data-id="' + m.id + '">Attach to this campaign</button>') +
+        '<button class="btn ghost sm" data-act="mod-edit" data-id="' + m.id + '">Rename / color</button></div></div>';
+  });
+  return h + '</div>';
+}
+
+function sceneHtml(m, act, sc, cm){
+  const mp = sc.mapId ? findMap(m, sc.mapId) : null;
+  const sRev = sceneRevealed(cm, sc.id);
+  let h = '<div class="scenecard"><div class="row" style="margin-bottom:4px"><h4 style="flex:1">' + esc(sc.name) + '</h4>' +
+    (cm ? (sRev ? '<span class="chip ok">Revealed</span>' : '<span class="chip">Hidden from players</span>') : '') +
+    '<button class="btn ghost sm" data-act="scn-edit" data-m="' + m.id + '" data-a="' + act.id + '" data-s="' + sc.id + '">Edit</button></div>';
+  h += paras(sc.narrative);
+  h += secBlock("Options", olList(sc.options));
+  h += secBlock("Enemy encounters", ulList(sc.enemies));
+  if(sc.reward) h += secBlock("Reward", '<p style="margin:0">' + esc(sc.reward) + '</p>');
+  if(mp){
+    h += secBlock("Map", graphMapSvg(mp));
+  }
+  const linked = (sc.npcIds||[]).map(id => (m.npcs||[]).find(n => n.id === id)).filter(Boolean);
+  if(linked.length){
+    h += secBlock("NPCs in this scene", '<div class="row" style="gap:5px">' + linked.map(n => {
+      const r = NPC_ROLES.find(x => x.k === n.role);
+      return '<span class="chip">' + esc(n.name) + (r ? ' · ' + esc(r.n) : '') + '</span>';
+    }).join("") + '</div>');
+  }
+  const gm = [];
+  if(modLines(sc.gmNotes).length) gm.push('<div class="sechead" style="margin-top:0">GM Notes</div>' + ulList(sc.gmNotes));
+  if((sc.dialogue||[]).length) gm.push('<div class="sechead">Sample dialogue</div>' + sc.dialogue.map(d =>
+    '<p style="margin:0 0 6px"><b>' + esc(d.who) + '</b> <span class="hand">“' + esc(d.text) + '”</span></p>').join(""));
+  if(gm.length) h += '<div class="gmonly"><div class="tiny" style="font-weight:700;color:var(--red-ink);margin-bottom:4px">GM ONLY — players never see this</div>' + gm.join("") + '</div>';
+  if(cm){
+    h += '<div class="revealrow">' +
+      (sRev ? '<button class="btn sm" data-act="scn-hide" data-m="' + m.id + '" data-s="' + sc.id + '">Hide scene from players</button>'
+            : '<button class="btn primary sm" data-act="scn-reveal" data-m="' + m.id + '" data-s="' + sc.id + '">Reveal scene to players</button>') +
+      (mp ? (mapRevealedFor(cm, mp.id)
+            ? '<button class="btn sm" data-act="map-hide" data-m="' + m.id + '" data-p="' + mp.id + '">Hide map</button>'
+            : '<button class="btn sm" data-act="map-reveal" data-m="' + m.id + '" data-p="' + mp.id + '">Reveal map</button>') : '') +
+      '</div>';
+  }
+  return h + '</div>';
+}
+
+function viewModuleDetail(m){
+  const c = moduleColor(m.color);
+  const cm = findCampaignModule(m.id);
+  let h = '<div class="row"><button class="btn ghost sm" data-act="mod-back">← All modules</button>' +
+    '<span class="right row">' + (cm ? '<button class="btn ghost sm" data-act="mod-detach" data-id="' + m.id + '">Detach from campaign</button>' : '') +
+    '<button class="btn ghost sm" data-act="mod-edit" data-id="' + m.id + '">Rename / color</button>' +
+    '<button class="btn danger sm" data-act="mod-delete" data-id="' + m.id + '">Delete</button></span></div>';
+  h += '<div class="modcard" style="border-left-color:' + c.hex + ';margin:10px 0 14px"><div class="row"><h2 class="sec" style="margin:0;flex:1">' + esc(m.name) + '</h2>' + modBadge(m.color, c.n) + '</div>' +
+    '<p class="tiny muted" style="margin:6px 0 0">' + esc(m.summary || "") + '</p></div>';
+  if(!cm){
+    h += '<div class="card" style="margin-bottom:14px;background:var(--gold-wash);border-color:var(--gold)"><b>Not attached to this campaign.</b> Attach it to start revealing scenes and maps to your players.' +
+      ' <button class="btn primary sm" data-act="mod-attach" data-id="' + m.id + '" style="margin-left:8px">Attach to this campaign</button></div>';
+  }
+
+  h += '<h2 class="sec">Story</h2>';
+  (m.acts||[]).forEach(a => {
+    h += '<div class="actcard"><div class="achead row"><span style="flex:1">' + esc(a.name) + '</span>' +
+      '<button class="btn ghost sm" data-act="act-rename" data-m="' + m.id + '" data-a="' + a.id + '">Rename</button>' +
+      '<button class="btn ghost sm" data-act="scn-add" data-m="' + m.id + '" data-a="' + a.id + '">Add scene</button>' +
+      '<button class="btn danger sm" data-act="act-delete" data-m="' + m.id + '" data-a="' + a.id + '">×</button></div>';
+    (a.scenes||[]).forEach(sc => { h += sceneHtml(m, a, sc, cm); });
+    if(!(a.scenes||[]).length) h += '<div class="lockedscene">No scenes yet.</div>';
+    h += '</div>';
+  });
+  h += '<button class="btn ghost sm" data-act="act-add" data-m="' + m.id + '">Add act</button>';
+
+  h += '<h2 class="sec" style="margin-top:22px">NPC sheets <span class="tiny muted" style="font-family:var(--f-ui)">— GM only</span></h2>' +
+    '<p class="tiny muted" style="margin:-4px 0 9px">These are templates. Adding one copies it into this campaign’s NPC roster, where you can track wounds and edit it freely. The roster is GM-only.</p>';
+  if((m.npcs||[]).length){
+    const unadded = m.npcs.filter(t => !npcCopied(m, t));
+    if(unadded.length) h += '<div style="margin-bottom:9px"><button class="btn primary sm" data-act="tnpc-copyall" data-m="' + m.id + '">Add all ' + unadded.length + ' to campaign NPCs</button></div>';
+    h += '<div class="grid g3">';
+    m.npcs.forEach(t => {
+      const r = NPC_ROLES.find(x => x.k === t.role);
+      const done = npcCopied(m, t);
+      h += '<div class="npccard" style="cursor:default;border-left:4px solid ' + c.hex + '"><div class="row" style="margin-bottom:4px"><h4 style="flex:1">' + esc(t.name) + '</h4>' +
+        (r ? '<span class="pill role-' + r.k + '">' + esc(r.n) + '</span>' : '') + '</div>' +
+        '<div class="hand tiny muted" style="margin-bottom:6px">' + esc(npcTypeLabel(t)) + '</div>' +
+        '<div class="row" style="gap:5px;margin-bottom:8px"><span class="chip">Def <b>' + num(t.combat.defense,10) + '</b></span><span class="chip">Soak <b>' + sign(num(t.combat.soak,0)) + '</b></span>' +
+        '<span class="chip">Mel <b>' + sign(num(t.combat.melee,0)) + '</b></span><span class="chip">Rng <b>' + sign(num(t.combat.ranged,0)) + '</b></span></div>' +
+        (done ? '<span class="chip ok">In campaign roster</span>' : '<button class="btn sm" data-act="tnpc-copy" data-m="' + m.id + '" data-n="' + t.id + '">Add to campaign NPCs</button>') +
+        '</div>';
+    });
+    h += '</div>';
+  } else h += '<div class="empty"><p>This module has no NPC sheets.</p></div>';
+  return h;
+}
+function npcCopied(m, t){ return (S.npcs||[]).some(n => n.moduleId === m.id && n.templateId === t.id); }
+
+function viewModulesPlayer(){
+  const list = S.campaignModules || [];
+  const open = S.openModuleId ? list.find(x => x.moduleId === S.openModuleId) : null;
+  if(open) return viewModulePlayerDetail(open);
+  let h = '<div class="banner"><span>Modules</span></div>';
+  if(!list.length) return h + '<div class="empty"><p>Your GM hasn’t attached an adventure yet.</p></div>';
+  h += '<div class="grid g2">';
+  list.forEach(cm => {
+    const c = moduleColor(cm.color);
+    const nRev = Object.keys((cm.revealed && cm.revealed.scenes) || {}).length;
+    h += '<div class="modcard" style="border-left-color:' + c.hex + ';cursor:pointer" data-act="mod-open" data-id="' + cm.moduleId + '">' +
+      '<div class="row" style="margin-bottom:4px"><h4 style="flex:1">' + esc(cm.moduleName) + '</h4>' + modBadge(cm.color, c.n) + '</div>' +
+      '<span class="chip">' + nRev + ' scene' + (nRev === 1 ? '' : 's') + ' revealed</span></div>';
+  });
+  return h + '</div>';
+}
+function viewModulePlayerDetail(cm){
+  const c = moduleColor(cm.color);
+  const rc = cm.revealedContent || {scenes:{}, maps:{}};
+  let h = '<div class="row"><button class="btn ghost sm" data-act="mod-back">← All modules</button></div>' +
+    '<div class="modcard" style="border-left-color:' + c.hex + ';margin:10px 0 14px"><div class="row"><h2 class="sec" style="margin:0;flex:1">' + esc(cm.moduleName) + '</h2>' + modBadge(cm.color, c.n) + '</div></div>';
+  (cm.acts||[]).forEach(a => {
+    h += '<div class="actcard"><div class="achead">' + esc(a.name) + '</div>';
+    (a.sceneIds||[]).forEach(id => {
+      const sc = rc.scenes && rc.scenes[id];
+      if(!sc){ h += '<div class="lockedscene"><span aria-hidden="true">🔒</span> Not yet revealed</div>'; return; }
+      h += '<div class="scenecard"><h4>' + esc(sc.name) + '</h4>' + paras(sc.narrative) +
+        secBlock("Options", olList(sc.options)) + secBlock("Enemy encounters", ulList(sc.enemies)) +
+        (sc.reward ? secBlock("Reward", '<p style="margin:0">' + esc(sc.reward) + '</p>') : '');
+      const mp = sc.mapId && rc.maps && rc.maps[sc.mapId];
+      if(mp) h += secBlock("Map", graphMapSvg(mp));
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+
+function viewModModal(){
+  const m = S.modModal;
+  return '<div class="scrim" data-act="mod-close" data-scrim="1"><div class="modal" data-stop="1">' +
+    '<header><h3>' + esc(m._isNew ? "New module" : "Module details") + '</h3><span class="right"><button class="btn ghost sm" data-act="mod-close">Close</button></span></header>' +
+    '<div class="body"><label class="fl">Name</label><input type="text" data-fk="modname" data-modf="name" value="' + esc(m.name) + '">' +
+    '<label class="fl" style="margin-top:12px">Color code</label><div class="row" style="gap:7px">' +
+    MODULE_COLORS.map(c => '<button class="modswatch ' + (m.color === c.k ? 'on' : '') + '" data-act="mod-color" data-k="' + c.k + '" style="background:' + c.hex + '" title="' + esc(c.n) + '" aria-label="' + esc(c.n) + '"></button>').join("") +
+    '</div><p class="tiny muted" style="margin:6px 0 0">Shown on the module card, scene headers, and the NPCs you copy from it — for you and your players.</p>' +
+    '<label class="fl" style="margin-top:12px">Summary</label><textarea data-fk="modsum" data-modf="summary">' + esc(m.summary) + '</textarea></div>' +
+    '<div class="foot"><button class="btn primary sm" data-act="mod-save">Save</button></div></div></div>';
+}
+function viewSceneModal(){
+  const d = S.sceneModal.draft;
+  const ta = (k, label, ph, rows) => '<label class="fl" style="margin-top:10px">' + label + '</label><textarea data-fk="scn' + k + '" data-scnf="' + k + '" placeholder="' + esc(ph||"") + '" style="min-height:' + (rows||58) + 'px">' + esc(d[k]) + '</textarea>';
+  return '<div class="scrim" data-act="scn-close" data-scrim="1"><div class="modal" data-stop="1">' +
+    '<header><h3>' + esc(d.name || "Scene") + '</h3><span class="right"><button class="btn ghost sm" data-act="scn-close">Close</button></span></header>' +
+    '<div class="body"><label class="fl">Scene name</label><input type="text" data-fk="scnname" data-scnf="name" value="' + esc(d.name) + '">' +
+    ta("narrative","Narrative","What the players see and are told",110) +
+    ta("options","Options (one per line)") + ta("enemies","Enemy encounters (one per line)") +
+    ta("reward","Reward") +
+    '<div class="gmonly" style="margin-top:12px"><div class="tiny" style="font-weight:700;color:var(--red-ink)">GM ONLY — never shown to players</div>' +
+    ta("gmNotes","GM Notes (one per line)") + ta("dialogue","Sample dialogue (one per line, as Speaker: line)") + '</div></div>' +
+    '<div class="foot">' + (S.sceneModal.isNew ? '' : '<button class="btn danger sm" data-act="scn-delete" style="margin-right:auto">Delete scene</button>') +
+    '<button class="btn primary sm" data-act="scn-save">Save</button></div></div></div>';
+}
+function sceneToDraft(sc){
+  return {name: sc.name, narrative: sc.narrative, options: (sc.options||[]).join("\n"), enemies: (sc.enemies||[]).join("\n"),
+    reward: sc.reward, gmNotes: (sc.gmNotes||[]).join("\n"),
+    dialogue: (sc.dialogue||[]).map(x => x.who + ": " + x.text).join("\n")};
+}
+function applyDraftToScene(sc, d){
+  const split = s => String(s||"").split("\n").map(x => x.trim()).filter(Boolean);
+  sc.name = d.name.trim() || "Untitled scene"; sc.narrative = d.narrative; sc.reward = d.reward;
+  sc.options = split(d.options); sc.enemies = split(d.enemies); sc.gmNotes = split(d.gmNotes);
+  sc.dialogue = split(d.dialogue).map(l => { const i = l.indexOf(":"); return i > 0 ? {who:l.slice(0,i).trim(), text:l.slice(i+1).trim()} : {who:"", text:l}; });
 }
 
 /* ---------- modal ----------------------------------------------------------- */
@@ -2966,11 +3714,11 @@ APP.addEventListener("click", async (ev) => {
       applyTheme(); render(); break;
     }
 
-    case "nav": S.view = t.dataset.v; if(S.view !== "expressions") S.forge = null; render(); window.scrollTo(0,0); break;
+    case "nav": S.view = t.dataset.v; S.openModuleId = null; if(S.view !== "expressions") S.forge = null; render(); window.scrollTo(0,0); break;
     case "open": S.charId = t.dataset.c; S.view = "overview"; S.forge = null; render(); window.scrollTo(0,0); break;
     case "entercamp": await enterCampaign(t.dataset.code); break;
     case "backtolist":
-      S.campaign = null; S.chars = []; S.charId = null; S.npcs = []; S.view = "dashboard";
+      S.campaign = null; S.chars = []; S.charId = null; S.npcs = []; S.campaignModules = []; S.openModuleId = null; S.view = "dashboard";
       unsubCampaignScope();
       render(); break;
 
@@ -3002,6 +3750,122 @@ APP.addEventListener("click", async (ev) => {
       if(!confirm("Delete " + (S.npcModal.name || "this NPC") + "?")) return;
       await deleteNpc(S.npcModal.id);
       S.npcModal = null; toast("Deleted."); render(); break;
+    }
+
+    /* ---- modules ---- */
+    case "mod-open": S.openModuleId = t.dataset.id; render(); window.scrollTo(0,0); break;
+    case "mod-back": S.openModuleId = null; render(); break;
+    case "gomodule": S.view = "modules"; S.openModuleId = t.dataset.id; render(); window.scrollTo(0,0); break;
+    case "mod-new": {
+      if(!isGM()) return;
+      const m = newModule(S.me.id, S.me.name); m._isNew = true; S.modModal = m; render(); break;
+    }
+    case "mod-seed": {
+      if(!isGM()) return;
+      const m = seedFlatEarthModule(S.me.id, S.me.name);
+      await saveModule(m);
+      S.openModuleId = m.id; toast("Flat Earth Saga added to your library."); render(); window.scrollTo(0,0); break;
+    }
+    case "mod-edit": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.id);
+      if(m) S.modModal = {id:m.id, name:m.name, color:m.color, summary:m.summary};
+      render(); break;
+    }
+    case "mod-close": S.modModal = null; render(); break;
+    case "mod-color": if(S.modModal){ S.modModal.color = t.dataset.k; render(); } break;
+    case "mod-save": {
+      if(!isGM() || !S.modModal) return;
+      const d = S.modModal;
+      if(!String(d.name||"").trim()){ toast("Give the module a name first."); return; }
+      let m;
+      if(d._isNew){ delete d._isNew; d.name = d.name.trim(); m = d; }
+      else {
+        m = S.modules.find(x => x.id === d.id); if(!m) return;
+        m.name = d.name.trim(); m.color = d.color; m.summary = d.summary;
+      }
+      await saveModule(m); await resyncAttached(m);
+      S.modModal = null; toast("Saved."); render(); break;
+    }
+    case "mod-delete": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.id); if(!m) return;
+      if(!confirm('Delete "' + m.name + '" from your library? Any copy attached to this campaign is removed too. NPCs you already copied into the roster stay.')) return;
+      const cm = findCampaignModule(m.id); if(cm) await deleteCampaignModule(cm.id);
+      await deleteModule(m.id); S.openModuleId = null; toast("Deleted."); render(); break;
+    }
+    case "mod-attach": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.id); if(!m) return;
+      await attachModule(m); toast("Attached to " + S.campaign.name + "."); render(); break;
+    }
+    case "mod-detach": {
+      if(!isGM()) return;
+      const cm = findCampaignModule(t.dataset.id); if(!cm) return;
+      if(!confirm("Detach this module from the campaign? Players lose everything you revealed. Your library copy is untouched.")) return;
+      await deleteCampaignModule(cm.id); toast("Detached."); render(); break;
+    }
+    case "scn-reveal": case "scn-hide": case "map-reveal": case "map-hide": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.m); const cm = m && findCampaignModule(m.id); if(!cm) return;
+      const on = act.endsWith("reveal"), bucket = act.startsWith("scn") ? "scenes" : "maps", id = t.dataset.s || t.dataset.p;
+      cm.revealed = cm.revealed || {scenes:{}, maps:{}}; cm.revealed[bucket] = cm.revealed[bucket] || {};
+      if(on) cm.revealed[bucket][id] = true; else delete cm.revealed[bucket][id];
+      syncCampaignModule(m, cm); await saveCampaignModule(cm); render(); break;
+    }
+    case "scn-edit": case "scn-add": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.m); const a = m && (m.acts||[]).find(x => x.id === t.dataset.a); if(!a) return;
+      if(act === "scn-add") S.sceneModal = {moduleId:m.id, actId:a.id, sceneId:null, isNew:true, draft:sceneToDraft(newScene("New scene"))};
+      else { const sc = a.scenes.find(x => x.id === t.dataset.s); if(!sc) return; S.sceneModal = {moduleId:m.id, actId:a.id, sceneId:sc.id, isNew:false, draft:sceneToDraft(sc)}; }
+      render(); break;
+    }
+    case "scn-close": S.sceneModal = null; render(); break;
+    case "scn-save": {
+      if(!isGM() || !S.sceneModal) return;
+      const sm = S.sceneModal; const m = S.modules.find(x => x.id === sm.moduleId); const a = m && m.acts.find(x => x.id === sm.actId); if(!a) return;
+      if(sm.isNew){ const sc = newScene(); applyDraftToScene(sc, sm.draft); a.scenes.push(sc); }
+      else { const sc = a.scenes.find(x => x.id === sm.sceneId); if(sc) applyDraftToScene(sc, sm.draft); }
+      await saveModule(m); await resyncAttached(m);
+      S.sceneModal = null; toast("Saved."); render(); break;
+    }
+    case "scn-delete": {
+      if(!isGM() || !S.sceneModal) return;
+      const sm = S.sceneModal; const m = S.modules.find(x => x.id === sm.moduleId); const a = m && m.acts.find(x => x.id === sm.actId); if(!a) return;
+      if(!confirm("Delete this scene?")) return;
+      a.scenes = a.scenes.filter(x => x.id !== sm.sceneId);
+      await saveModule(m); await resyncAttached(m);
+      S.sceneModal = null; toast("Deleted."); render(); break;
+    }
+    case "act-add": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.m); if(!m) return;
+      const nm = prompt("Name this act", "Act " + ((m.acts||[]).length + 1)); if(nm === null) return;
+      m.acts.push(newAct(nm.trim() || "New Act")); await saveModule(m); await resyncAttached(m); render(); break;
+    }
+    case "act-rename": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.m); const a = m && m.acts.find(x => x.id === t.dataset.a); if(!a) return;
+      const nm = prompt("Rename act", a.name); if(nm === null || !nm.trim()) return;
+      a.name = nm.trim(); await saveModule(m); await resyncAttached(m); render(); break;
+    }
+    case "act-delete": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.m); const a = m && m.acts.find(x => x.id === t.dataset.a); if(!a) return;
+      if(!confirm('Delete "' + a.name + '" and its ' + (a.scenes||[]).length + ' scene(s)?')) return;
+      m.acts = m.acts.filter(x => x.id !== a.id); await saveModule(m); await resyncAttached(m); render(); break;
+    }
+    case "tnpc-copy": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.m); const tn = m && m.npcs.find(x => x.id === t.dataset.n); if(!tn || npcCopied(m, tn)) return;
+      await copyTemplateNpc(m, tn); toast(tn.name + " added to your NPCs."); render(); break;
+    }
+    case "tnpc-copyall": {
+      if(!isGM()) return;
+      const m = S.modules.find(x => x.id === t.dataset.m); if(!m) return;
+      let n = 0;
+      for(const tn of m.npcs){ if(!npcCopied(m, tn)){ await copyTemplateNpc(m, tn); n++; } }
+      toast(n + " NPC" + (n === 1 ? "" : "s") + " added to your roster."); render(); break;
     }
 
     case "toggle-gmedit":
@@ -3197,6 +4061,9 @@ APP.addEventListener("click", async (ev) => {
 APP.addEventListener("input", (ev) => {
   const el = ev.target;
 
+  if(el.dataset.modf != null && S.modModal){ S.modModal[el.dataset.modf] = el.value; return; }
+  if(el.dataset.scnf != null && S.sceneModal){ S.sceneModal.draft[el.dataset.scnf] = el.value; return; }
+
   if(el.dataset.npc != null && S.npcModal){
     const p = el.dataset.npc;
     const val = el.type === "number" ? num(el.value,0) : el.value;
@@ -3372,7 +4239,7 @@ async function doSignOut(){
   unsubAll();
   if(S.localMode){
     const blob = localAuthBlob(); blob.session = null; saveLocalAuthBlob(blob);
-    S.me = {id:null, name:""}; S.campaign = null; S.chars = []; S.myCampaigns = []; S.authView = "signin";
+    S.me = {id:null, name:""}; S.campaign = null; S.chars = []; S.myCampaigns = []; S.modules = []; S.campaignModules = []; S.authView = "signin";
     render(); return;
   }
   try { await firebase.auth().signOut(); } catch(e){}
@@ -3451,7 +4318,7 @@ async function createCampaign(){
     playerIds: [], spendLimit:false, goodwillBudget: 0, tiers: JSON.parse(JSON.stringify(DEFAULT_TIERS)), gear:[],
     createdAt: Date.now(), updatedAt: Date.now()
   };
-  S.campaign = cp; S.chars = []; S.npcs = [];
+  S.campaign = cp; S.chars = []; S.npcs = []; S.campaignModules = []; S.openModuleId = null;
   await saveCampaign();
   subscribeMyCampaigns();
   subscribeCampaignScope();
@@ -3495,7 +4362,7 @@ async function joinCampaign(){
 async function enterCampaign(code){
   const cached = (S.myCampaigns||[]).find(x => x.code === code);
   if(cached) S.campaign = cached;
-  S.chars = []; S.npcs = [];
+  S.chars = []; S.npcs = []; S.campaignModules = []; S.openModuleId = null;
   subscribeCampaignScope();
   S.view = "dashboard";
   render();
@@ -3527,9 +4394,18 @@ function subscribeMyCampaigns(){
   if(S.localMode){
     const blob = localRead();
     S.myCampaigns = (blob && blob.campaign) ? [blob.campaign] : [];
+    S.modules = ((blob && blob.modules) || []).map(migrateModule);
     return;
   }
   if(!S.db || !S.me.id) return;
+  unsubMyCampaigns.push(S.db.collection("modules").where("ownerId","==",S.me.id).onSnapshot(
+    (snap) => {
+      const incoming = []; snap.forEach(d => incoming.push(migrateModule(d.data())));
+      incoming.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+      S.modules = incoming; if(S.campaign) render();
+    },
+    (e) => handleWriteError(e)
+  ));
   let asGm = [], asPlayer = [];
   const merge = () => {
     const byCode = {};
@@ -3549,8 +4425,16 @@ function subscribeMyCampaigns(){
 
 function subscribeCampaignScope(){
   unsubCampaignScope();
+  if(S.localMode && S.campaign){
+    const blob = localRead() || {};
+    S.campaignModules = (blob.campaignModules || []).filter(x => x.campaign === S.campaign.code);
+  }
   if(S.localMode || !S.db || !S.campaign) return;
   const code = S.campaign.code;
+  unsubScope.push(S.db.collection("campaignModules").where("campaign", "==", code).onSnapshot(
+    (snap) => { const incoming = []; snap.forEach(d => incoming.push(d.data())); S.campaignModules = incoming; if(!S.forge) render(); },
+    (e) => handleWriteError(e)
+  ));
   unsubScope.push(S.db.collection("characters").where("campaign", "==", code).onSnapshot(
     (snap) => {
       const incoming = [];
@@ -3606,6 +4490,66 @@ async function deleteNpc(id){
   catch(e){ handleWriteError(e); }
 }
 
+/* ---- Modules ---------------------------------------------------------------- */
+async function saveModule(m){
+  m.updatedAt = Date.now();
+  if(S.localMode){
+    const blob = localRead() || {};
+    const list = (blob.modules || []).filter(x => x.id !== m.id); list.push(m);
+    blob.modules = list; localWrite(blob); S.modules = list.slice(); return;
+  }
+  try { await S.db.doc("modules/" + m.id).set(stripUndef(m)); }
+  catch(e){ handleWriteError(e); }
+}
+async function deleteModule(id){
+  if(S.localMode){
+    const blob = localRead() || {};
+    blob.modules = (blob.modules || []).filter(x => x.id !== id);
+    localWrite(blob); S.modules = blob.modules.slice(); return;
+  }
+  try { await S.db.doc("modules/" + id).delete(); }
+  catch(e){ handleWriteError(e); }
+}
+async function saveCampaignModule(cm){
+  cm.updatedAt = Date.now();
+  S.campaignModules = (S.campaignModules || []).filter(x => x.id !== cm.id).concat([cm]);
+  if(S.localMode){
+    const blob = localRead() || {};
+    blob.campaignModules = (blob.campaignModules || []).filter(x => x.id !== cm.id).concat([cm]);
+    localWrite(blob); return;
+  }
+  try { await S.db.doc("campaignModules/" + cm.id).set(stripUndef(cm)); }
+  catch(e){ handleWriteError(e); }
+}
+async function deleteCampaignModule(id){
+  S.campaignModules = (S.campaignModules || []).filter(x => x.id !== id);
+  if(S.localMode){
+    const blob = localRead() || {};
+    blob.campaignModules = (blob.campaignModules || []).filter(x => x.id !== id);
+    localWrite(blob); return;
+  }
+  try { await S.db.doc("campaignModules/" + id).delete(); }
+  catch(e){ handleWriteError(e); }
+}
+async function attachModule(m){
+  const cm = newCampaignModule(S.campaign.code, m, S.me.id);
+  syncCampaignModule(m, cm);
+  await saveCampaignModule(cm);
+}
+async function resyncAttached(m){
+  const cm = findCampaignModule(m.id);
+  if(cm){ syncCampaignModule(m, cm); await saveCampaignModule(cm); }
+}
+async function copyTemplateNpc(m, t){
+  const n = newNpc(S.campaign.code, S.me.id);
+  Object.assign(n, JSON.parse(JSON.stringify(t)), {
+    id: uid("npc_"), campaign: S.campaign.code, createdBy: S.me.id,
+    createdAt: Date.now(), updatedAt: Date.now(),
+    moduleId: m.id, moduleColor: m.color, templateId: t.id
+  });
+  await saveNpc(n);
+}
+
 /* ---- boot ------------------------------------------------------------------ */
 async function boot(){
   applyTheme();
@@ -3630,7 +4574,7 @@ async function boot(){
     if(user){
       await applySignedInUser(user.uid, {displayName: user.displayName || "", email: user.email || ""});
     } else {
-      S.me = {id:null, name:""}; S.campaign = null; S.chars = []; S.myCampaigns = [];
+      S.me = {id:null, name:""}; S.campaign = null; S.chars = []; S.myCampaigns = []; S.modules = []; S.campaignModules = [];
       S.ready = true; render();
     }
   });
